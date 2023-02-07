@@ -1,38 +1,78 @@
 import math
 
-import ctre
+from wpilib import AnalogGyro
+from wpimath.geometry import Translation2d
+from wpimath.kinematics import SwerveModulePosition, ChassisSpeeds, SwerveDrive4Kinematics, SwerveDrive4Odometry
+
+from swerve import m_kinematics
+from swerveModule import SwerveModule, kMaxSpeed
 
 
+kMaxAngularSpeed = math.pi  # 1/2 rotation per second
+
+
+# Represents a swerve drive style drivetrain.
 class Drivetrain:
+    m_frontLeftLocation = Translation2d(0.381, 0.381)
+    m_frontRightLocation = Translation2d(0.381, -0.381)
+    m_backLeftLocation = Translation2d(-0.381, 0.381)
+    m_backRightLocation = Translation2d(-0.381, -0.381)
 
-    EASE_VALUE = 0.0175
-    last_speed = 0
-    last_rotation = 0
+    m_frontLeft = SwerveModule(1, 2, 0, 1, 2, 3)
+    m_frontRight = SwerveModule(3, 4, 4, 5, 6, 7)
+    m_backLeft = SwerveModule(5, 6, 8, 9, 10, 11)
+    m_backRight = SwerveModule(7, 8, 12, 13, 14, 15)
 
-    def __init__(self):
-        self.front_left = ctre.WPI_TalonFX(1, "rio")
-        self.back_left = ctre.WPI_TalonFX(2, "rio")
-        self.front_right = ctre.WPI_TalonFX(3, "rio")
-        self.back_right = ctre.WPI_TalonFX(4, "rio")
+    m_gyro = AnalogGyro(0)
 
-    def drive(self, speed: float, rotation: float):
-        speed *= 0.7
-        if speed > self.last_speed + self.EASE_VALUE and self.last_speed < speed:
-            speed = self.last_speed + self.EASE_VALUE
-        if speed < self.last_speed - self.EASE_VALUE and self.last_speed > speed:
-            speed = self.last_speed - self.EASE_VALUE
-        self.last_speed = speed
-        rotation *= 0.4
-        # if rotation > self.last_rotation + self.EASE_VALUE and self.last_rotation < rotation:
-        #     rotation = self.last_rotation + self.EASE_VALUE
-        # if rotation < self.last_rotation - self.EASE_VALUE and self.last_rotation > rotation:
-        #     rotation = self.last_rotation - self.EASE_VALUE
-        # self.last_rotation = rotation
-        self.front_left.set(rotation - speed)
-        self.front_right.set(rotation + speed)
-        self.back_left.set(rotation - speed)
-        self.back_right.set(rotation + speed)
-        # self.drivetrain.drive(self.controller1.getLeftY(), self.controller1.getLeftX())
+    m_kinematics = SwerveDrive4Kinematics(m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation,
+                                          m_backRightLocation)
 
-    def update(self):
-        pass
+    m_odometry = SwerveDrive4Odometry(
+        m_kinematics,
+        m_gyro.getRotation2d(),
+        (
+            m_frontLeft.getPosition(),
+            m_frontRight.getPosition(),
+            m_backLeft.getPosition(),
+            m_backRight.getPosition()
+        )
+    )
+
+    def Drivetrain(self):
+        self.m_gyro.reset()
+
+    """
+   * Method to drive the robot using joystick info.
+   *
+   * @param xSpeed Speed of the robot in the x direction (forward).
+   * @param ySpeed Speed of the robot in the y direction (sideways).
+   * @param rot Angular rate of the robot.
+   * @param fieldRelative Whether the provided x and y speeds are relative to the field.
+   """
+
+    def drive(self, xSpeed, ySpeed, rot, fieldRelative):
+        driveMovement = None
+        if fieldRelative:
+            driveMovement = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, self.m_gyro.getRotation2d())
+        else:
+            driveMovement = ChassisSpeeds(xSpeed, ySpeed, rot)
+
+        swerveModuleStates = m_kinematics.toSwerveModuleStates(driveMovement, '''NO CLUE WHAT TO PUT HERE''')
+        SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed)
+        self.m_frontLeft.setDesiredState(swerveModuleStates[0])
+        self.m_frontRight.setDesiredState(swerveModuleStates[1])
+        self.m_backLeft.setDesiredState(swerveModuleStates[2])
+        self.m_backRight.setDesiredState(swerveModuleStates[3])
+
+    """ Updates the field relative position of the robot. """
+
+    def updateOdometry(self):
+        self.m_odometry.update(
+            self.m_gyro.getRotation2d(),
+            [
+                self.m_frontLeft.getPosition(),
+                self.m_frontRight.getPosition(),
+                self.m_backLeft.getPosition(),
+                self.m_backRight.getPosition()
+            ])

@@ -1,74 +1,37 @@
-import ctre
-import rev
-import wpilib
-import wpilib.drive
-
-from drivetrain import Drivetrain
-from arm import Arm
-from pcm import Pcm
-from claw import Claw
-
+import swerve
+from wpimath.geometry import Rotation2d, Pose2d
+from swerve import *
+from wpimath.kinematics import SwerveDrive4Kinematics, SwerveDrive4Odometry
 
 class Robot(wpilib.TimedRobot):
-    time: wpilib.Timer
-    controller1: wpilib.XboxController
-    controller2: wpilib.XboxController
-    drivetrain: Drivetrain
-    arm: Arm
-    pcm: Pcm
-    claw: Claw
-    testMotor: rev.CANSparkMax
 
     def robotInit(self):
-
-        self.time = wpilib.Timer()
+        print("Robot Initialized")
         self.controller1 = wpilib.XboxController(0)
         self.controller2 = wpilib.XboxController(1)
-        self.drivetrain = Drivetrain()
-        self.arm = Arm(ctre.WPI_TalonFX(11), ctre.WPI_VictorSPX(9))
-        self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
-        self.claw = Claw(self.pcm.getSolendoid(1))
-
-        try:
-            pdp = wpilib.PowerDistribution(0, wpilib.PowerDistribution.ModuleType.kCTRE)
-            faults = pdp.getStickyFaults()
-            print(f'{faults.print()}')
-            pdp.clearStickyFaults()
-        except Exception as e:
-            print(e)
+        self.arm = ctre.WPI_VictorSPX(11)
+        self.kin = SwerveDrive4Kinematics()
+        self.swerve = SwerveDrive4Odometry(self.kin, Rotation2d(0, 0), Pose2d())
 
     def autonomousInit(self):
-        self.time.reset()
-        self.time.start()
+        print("Started Autonomous")
 
     def autonomousPeriodic(self):
         pass
 
     def autonomousExit(self):
-        self.time.stop()
+        print("Exited Autonomous")
 
     def teleopInit(self):
-        self.time.start()
+        print("Started Teleop")
+        self.arm.set(self.controller1.getRightY() * 0.3)
+
 
     def teleopPeriodic(self):
-
-        self.drivetrain.update()
-        self.arm.update()
-        self.pcm.update()
-
-        # calculationForSwerveDrive()
-
-        if self.controller1.getAButtonPressed():
-            self.claw.update()
+        swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
 
     def teleopExit(self):
-        self.time.stop()
-
-    def testInit(self):
-        self.testMotor = ctre.WPI_TalonFX(9)
-
-    def testPeriodic(self):
-        self.testMotor.set(self.controller1.getLeftY() * 0.7)
+        print("Exited Teleop")
 
 
 if __name__ == "__main__":
