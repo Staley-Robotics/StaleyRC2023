@@ -1,6 +1,8 @@
 import ctre
 import wpilib
 import wpilib.drive
+import wpimath
+import wpimath.controller
 
 from drivetrain import Drivetrain
 from arm import Arm
@@ -16,7 +18,10 @@ class Robot(wpilib.TimedRobot):
     arm: Arm
     pcm: Pcm
     claw: Claw
-    testMotor: ctre.WPI_TalonSRX
+
+    extendMotor: ctre.WPI_TalonSRX
+    extendPID: wpimath.controller.PIDController
+    extendFeedForward: wpimath.controller.SimpleMotorFeedforwardMeters
 
     def robotInit(self):
 
@@ -55,8 +60,6 @@ class Robot(wpilib.TimedRobot):
         self.arm.update()
         self.pcm.update()
 
-        # calculationForSwerveDrive()
-
         if self.controller1.getAButtonPressed():
             self.claw.update()
 
@@ -64,15 +67,28 @@ class Robot(wpilib.TimedRobot):
         self.time.stop()
 
     def testInit(self):
-        self.testMotor = ctre.WPI_TalonSRX(31)
-        self.testMotor.configSelectedFeedbackSensor(ctre._ctre.FeedbackDevice.QuadEncoder, 0, 0)
+
+        self.extendMotor = ctre.WPI_TalonSRX(31)
+        self.extendMotor.configSelectedFeedbackSensor(ctre.FeedbackDevice.QuadEncoder, 0, 0)
+        self.extendMotor.getSensorCollection()
+        self.extendMotor.setSelectedSensorPosition(0, 0, 0)
+
+        self.extendMotor.configForwardSoftLimitThreshold(16384, 0)
+        self.extendMotor.configForwardSoftLimitEnable(True, 0)
+        self.extendMotor.configReverseSoftLimitThreshold(-1, 0)
+        self.extendMotor.configReverseSoftLimitEnable(True, 0)
+
+        self.extendPID = wpimath.controller.PIDController(1, 0, 0)
+        self.extendFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(1, 0.5)
+
+        # distance times radius of wheel
+        # feedforward.calculate(1, 2, 3);
 
     def testPeriodic(self):
-        self.testMotor.set(self.controller1.getLeftY() * 0.5)
-        # count = self.testMotor.getQuadraturePosition()
-        # print(count)
-        # ctre.SensorCollection(motorController: ctre._ctre.BaseTalon)
-        # getQuadraturePosition()
+
+        self.extendMotor.set(self.controller1.getLeftY() * 0.4)
+        count = self.extendMotor.getSelectedSensorPosition()
+        print(count)
 
 
 if __name__ == "__main__":
