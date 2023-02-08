@@ -39,7 +39,7 @@ class Drivetrain:
         )
     )
 
-    def Drivetrain(self):
+    def __init__(self):
         self.m_gyro.reset()
 
     """

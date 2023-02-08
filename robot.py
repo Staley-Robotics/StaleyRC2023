@@ -1,3 +1,4 @@
+import drivetrain
 import swerve
 from wpimath.geometry import Rotation2d, Pose2d
 from swerve import *
@@ -10,8 +11,9 @@ class Robot(wpilib.TimedRobot):
         self.controller1 = wpilib.XboxController(0)
         self.controller2 = wpilib.XboxController(1)
         self.arm = ctre.WPI_VictorSPX(11)
-        self.kin = SwerveDrive4Kinematics()
-        self.swerve = SwerveDrive4Odometry(self.kin, Rotation2d(0, 0), Pose2d())
+        #self.kin = SwerveDrive4Kinematics()
+        #self.swerve = SwerveDrive4Odometry(self.kin, Rotation2d(0, 0), Pose2d())
+        self.swerve = drivetrain.Drivetrain()
 
     def autonomousInit(self):
         print("Started Autonomous")
@@ -31,8 +33,6 @@ class Robot(wpilib.TimedRobot):
         leftx1 = self.controller1.getleftX()
         lefty1 = self.controller1.getLeftY()
         rightx1 = self.controller1.getRightX()
-
-
 
         self.swerve.drive(leftx1, lefty1, rightx1, True)
 
