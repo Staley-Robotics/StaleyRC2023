@@ -28,7 +28,13 @@ class Robot(wpilib.TimedRobot):
 
 
     def teleopPeriodic(self):
-        swerve.drive(xSpeed, ySpeed, rot, fieldRelative)
+        leftx1 = self.controller1.getleftX()
+        lefty1 = self.controller1.getLeftY()
+        rightx1 = self.controller1.getRightX()
+
+
+
+        self.swerve.drive(leftx1, lefty1, rightx1, True)
 
     def teleopExit(self):
         print("Exited Teleop")
