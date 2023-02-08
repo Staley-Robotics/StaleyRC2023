@@ -1,5 +1,4 @@
 import ctre
-import rev
 import wpilib
 import wpilib.drive
 
@@ -17,7 +16,7 @@ class Robot(wpilib.TimedRobot):
     arm: Arm
     pcm: Pcm
     claw: Claw
-    testMotor: rev.CANSparkMax
+    testMotor: ctre.WPI_TalonSRX
 
     def robotInit(self):
 
@@ -65,10 +64,15 @@ class Robot(wpilib.TimedRobot):
         self.time.stop()
 
     def testInit(self):
-        self.testMotor = ctre.WPI_TalonFX(9)
+        self.testMotor = ctre.WPI_TalonSRX(31)
+        self.testMotor.configSelectedFeedbackSensor(ctre._ctre.FeedbackDevice.QuadEncoder, 0, 0)
 
     def testPeriodic(self):
-        self.testMotor.set(self.controller1.getLeftY() * 0.7)
+        self.testMotor.set(self.controller1.getLeftY() * 0.5)
+        # count = self.testMotor.getQuadraturePosition()
+        # print(count)
+        # ctre.SensorCollection(motorController: ctre._ctre.BaseTalon)
+        # getQuadraturePosition()
 
 
 if __name__ == "__main__":
