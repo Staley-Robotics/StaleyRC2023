@@ -3,8 +3,13 @@ import wpilib
 import wpimath.controller
 import math
 
+# vehemently vomiting violent vulgarisms
+# placidly placing purple plaques
+# sadistically spacing sanguine serpents
+# tremulously tracking truant tripe
 
-class Arm:
+
+class ArmedExtension:
 
     liftMotor: ctre.WPI_TalonFX = None
     extendMotor: ctre.VictorSPX = None
@@ -42,7 +47,7 @@ class Arm:
         self.armMath.kA = kA
 
 
-class Armed:
+class ArmedRotation:
 
     """
     TODO Figure out encoder
@@ -73,21 +78,19 @@ class Armed:
         self.armRE = wpilib.Encoder(14)
         self.armRE.reset()
 
-    def test(self):
-        self.armR.set(wpilib.XboxController.getLeftY)
-        self.armRE.get()
-        print(self.armRE.get())
+    def calcRotations(self, ticks):
+        # do rotation calculation
+        ticksButDegrees = ticks
+        return ticksButDegrees
 
     def moveTo(self, pos):
-        rotation = calcRotations(
-            self.armRE.tickNum)  # this line to be implemented when I figure out how to get ticks from the
-        # encoder
+        rotation = self.calcRotations(self.armRE.get())  # this line to be implemented when I figure out how to get
+        # ticks from the encoder
         length = self.armL.length()  # this line to be implemented when I figure out how to get length from the arm
         if pos == "grabZone":
             if rotation > self.grabbingBay:  # the 0 value will change to reflect the smallest/lowest position
-                self.armR.set(
-                    self.towardBay)  # For these set() calls, I'm assuming that I'm viewing the robot from the port side
-                # and CCW is negative
+                self.armR.set(self.towardBay)  # For these set() calls, I'm assuming that I'm viewing the robot from
+                # the port side and CCW is negative
             else:
                 self.armR.set(0)
             if length > self.bayLength:
