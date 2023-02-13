@@ -1,5 +1,6 @@
 import math
 
+import wpilib
 from wpilib import PWMSparkMax, Encoder
 from wpimath.controller import PIDController, ProfiledPIDController, SimpleMotorFeedforwardMeters
 from wpimath.trajectory import TrapezoidProfile
@@ -61,6 +62,11 @@ class SwerveModule:
     driveEncoderChannelB,
     turningEncoderChannelA,
     turningEncoderChannelB):
+
+    self.m_turningEncoder = wpilib.Encoder(1, 3, 5, 7)
+    self.m_drivingEncoder = wpilib.Encoder(2, 4, 6, 8)
+
+
     m_driveMotor = PWMSparkMax(driveMotorChannel)
     m_turningMotor = PWMSparkMax(turningMotorChannel)
 
