@@ -2,7 +2,7 @@ import math
 
 from wpilib import AnalogGyro
 from wpimath.geometry import Translation2d
-from wpimath.kinematics import SwerveModulePosition, ChassisSpeeds, SwerveDrive4Kinematics, SwerveDrive4Odometry
+from wpimath.kinematics import ChassisSpeeds, SwerveDrive4Kinematics, SwerveDrive4Odometry
 
 from swerve import m_kinematics
 from swerveModule import SwerveModule, kMaxSpeed
@@ -70,9 +70,8 @@ class Drivetrain:
     def updateOdometry(self):
         self.m_odometry.update(
             self.m_gyro.getRotation2d(),
-            [
                 self.m_frontLeft.getPosition(),
                 self.m_frontRight.getPosition(),
                 self.m_backLeft.getPosition(),
                 self.m_backRight.getPosition()
-            ])
+            )

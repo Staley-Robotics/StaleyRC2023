@@ -1,8 +1,7 @@
 import drivetrain
-import swerve
-from wpimath.geometry import Rotation2d, Pose2d
 from swerve import *
-from wpimath.kinematics import SwerveDrive4Kinematics, SwerveDrive4Odometry
+import wpilib
+
 
 class Robot(wpilib.TimedRobot):
 
