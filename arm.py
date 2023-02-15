@@ -6,7 +6,7 @@ import math
 # vehemently vomiting violent vulgarisms
 # placidly placing purple plaques
 # sadistically spacing sanguine serpents
-# tremulously tracking truant tripe
+# tremulously tracking tramping truant tripe
 
 
 class ArmedExtension:
@@ -68,71 +68,41 @@ class ArmedRotation:
         self.extend = 1
         self.retract = -1
 
-        self.bayLength = 4
-        self.topLength = 20
-        self.midLength = 16
-        self.lowLength = 10
-
         self.armR = ctre.WPI_TalonFX(14)  # arm rotation motor number
-        self.armL = ctre.WPI_TalonFX(13)  # arm extension motor number
         self.armRE = wpilib.Encoder(14)
         self.armRE.reset()
 
     def calcRotations(self, ticks):
         # do rotation calculation
-        ticksButDegrees = ticks
+        ticksButDegrees = ticks * 4096/360
         return ticksButDegrees
 
     def moveTo(self, pos):
-        rotation = self.calcRotations(self.armRE.get())  # this line to be implemented when I figure out how to get
-        # ticks from the encoder
-        length = self.armL.length()  # this line to be implemented when I figure out how to get length from the arm
+        RotationInDegrees = self.calcRotations(self.armRE.get())
         if pos == "grabZone":
-            if rotation > self.grabbingBay:  # the 0 value will change to reflect the smallest/lowest position
+            if RotationInDegrees > self.grabbingBay*2:
                 self.armR.set(self.towardBay)  # For these set() calls, I'm assuming that I'm viewing the robot from
-                # the port side and CCW is negative
+                # the left (port) side and CCW is negative
             else:
                 self.armR.set(0)
-            if length > self.bayLength:
-                self.armL.set(self.retract)
-            else:
-                self.armL.set(0)
         elif pos == "topZone":
-            if rotation > self.topPos:  # the 245 value will change to reflect the top position
+            if RotationInDegrees > self.topPos*2:
                 self.armR.set(self.towardBay)
-            elif rotation < self.topPos:  # the 245 value will change to reflect the top position
+            elif RotationInDegrees < self.topPos*2:
                 self.armR.set(self.towardPlatform)
             else:
                 self.armR.set(0)
-            if length > self.topLength:
-                self.armL.set(self.retract)
-            elif length < self.topLength:
-                self.armL.set(self.extend)
-            else:
-                self.armL.set(0)
         elif pos == "midZone":
-            if rotation > self.midPos:  # the 260 value will change to reflect the middle position
+            if RotationInDegrees > self.midPos*2:
                 self.armR.set(self.towardBay)
-            elif rotation < self.midPos:  # the 260 value will change to reflect the middle position
+            elif RotationInDegrees < self.midPos*2:
                 self.armR.set(self.towardPlatform)
             else:
                 self.armR.set(0)
-            if length > self.midLength:
-                self.armL.set(self.retract)
-            elif length < self.midLength:
-                self.armL.set(self.extend)
-            else:
-                self.armL.set(0)
         elif pos == "lowZone":
-            if rotation > self.lowPos:  # the 300 value will change to reflect the hybrid position
+            if RotationInDegrees > self.lowPos*2:
                 self.armR.set(self.towardBay)
-            elif rotation < self.lowPos:  # the 300 value will change to reflect the hybrid position
+            elif RotationInDegrees < self.lowPos*2:
                 self.armR.set(self.towardPlatform)
             else:
                 self.armR.set(0)
-            if length > self.lowLength:
-                self.armL.set(self.retract)
-            elif length < self.lowLength:
-                self.armL.set(self.extend)
-            else:
-                self.armL.set(0)
