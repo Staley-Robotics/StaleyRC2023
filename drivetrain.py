@@ -2,7 +2,7 @@ import math
 
 from wpilib import AnalogGyro
 from wpimath.geometry import Translation2d
-from wpimath.kinematics import ChassisSpeeds, SwerveDrive4Kinematics, SwerveDrive4Odometry
+from wpimath.kinematics import ChassisSpeeds, SwerveDrive4Kinematics
 
 from swerve import m_kinematics
 from swerveModule import SwerveModule, kMaxSpeed
@@ -25,7 +25,7 @@ class Drivetrain:
 
     m_gyro = AnalogGyro(0)
 
-    m_kinematics = SwerveDrive4Kinematics(m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation,\4m_backRightLocation)2
+    m_kinematics = SwerveDrive4Kinematics(m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation,m_backRightLocation)
 
     #m_odometry = SwerveDrive4Odometry(
     #    m_kinematics,
@@ -67,10 +67,11 @@ class Drivetrain:
     """ Updates the field relative position of the robot. """
 
     def updateOdometry(self):
-        self.m_odometry.update(
-            self.m_gyro.getRotation2d(),
-                self.m_frontLeft.getPosition(),
-                self.m_frontRight.getPosition(),
-                self.m_backLeft.getPosition(),
-                self.m_backRight.getPosition()
-            )
+        #self.m_odometry.update(
+        #   self.m_gyro.getRotation2d(),
+        #       self.m_frontLeft.getPosition(),
+        #       self.m_frontRight.getPosition(),
+        #       self.m_backLeft.getPosition(),
+        #       self.m_backRight.getPosition()
+        #   )
+        pass
