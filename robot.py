@@ -1,21 +1,32 @@
+import math
+from enum import Enum
+
 import ctre
 import wpilib
 import wpilib.drive
 import wpimath
 import wpimath.controller
+import wpimath.trajectory
 
 from drivetrain import Drivetrain
-from arm import Arm
+from arm import ArmedExtension
 from pcm import Pcm
 from claw import Claw
 
+
+class State(Enum):
+    stick = -1
+    hub = 0
+    hybrid = 1
+    mid = 2
+    tree = 3
 
 class Robot(wpilib.TimedRobot):
     time: wpilib.Timer
     controller1: wpilib.XboxController
     controller2: wpilib.XboxController
     drivetrain: Drivetrain
-    arm: Arm
+    arm: ArmedExtension
     pcm: Pcm
     claw: Claw
 
@@ -29,7 +40,7 @@ class Robot(wpilib.TimedRobot):
         self.controller1 = wpilib.XboxController(0)
         self.controller2 = wpilib.XboxController(1)
         self.drivetrain = Drivetrain()
-        self.arm = Arm(ctre.WPI_TalonFX(11), ctre.WPI_VictorSPX(9))
+        self.arm = ArmedExtension(ctre.WPI_TalonFX(11), ctre.WPI_VictorSPX(9))
         self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
         self.claw = Claw(self.pcm.getSolendoid(1))
 
@@ -73,22 +84,43 @@ class Robot(wpilib.TimedRobot):
         self.extendMotor.getSensorCollection()
         self.extendMotor.setSelectedSensorPosition(0, 0, 0)
 
+        '''
         self.extendMotor.configForwardSoftLimitThreshold(16384, 0)
         self.extendMotor.configForwardSoftLimitEnable(True, 0)
         self.extendMotor.configReverseSoftLimitThreshold(-1, 0)
         self.extendMotor.configReverseSoftLimitEnable(True, 0)
+        '''
 
-        self.extendPID = wpimath.controller.PIDController(1, 0, 0)
-        self.extendFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(1, 0.5)
-
-        # distance times radius of wheel
-        # feedforward.calculate(1, 2, 3);
+        '''
+        profile = wpimath.trajectory.TrapezoidProfile.Constraints(math.pi, 2 * math.pi)
+        self.extendPID = wpimath.controller.ProfiledPIDController(0.5, 0, 0, profile)
+        '''
+        # self.extendPID.setTolerance(0.1, 0.1)
+        # self.extendPID.setIntegratorRange(-0.25, 0.25)
+        # self.extendPID.setSetpoint()
+        self.goal = 0
+        self.state = State.hub
+        self.to = 0
+        self.limiter = 5
 
     def testPeriodic(self):
 
-        self.extendMotor.set(self.controller1.getLeftY() * 0.4)
         count = self.extendMotor.getSelectedSensorPosition()
-        print(count)
+
+        if self.controller1.getLeftBumperPressed() and count < 16384:
+
+            # self.extendMotor.set(self.controller1.getLeftY())
+            print(f"counts = {count}")
+            Volts = self.extendPID.calculate(count, 8 * math.pi)
+            self.extendMotor.setVoltage(min(Volts, 1))
+            print(Volts)
+
+        elif self.controller1.getRightBumperPressed() and count > 0:
+
+            print(f"counts = {count}")
+            Volts = self.extendPID.calculate(count, 0)
+            self.extendMotor.setVoltage(max(Volts, -1))
+            print(Volts)
 
 
 if __name__ == "__main__":
