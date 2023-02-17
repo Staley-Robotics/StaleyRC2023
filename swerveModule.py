@@ -1,5 +1,6 @@
 import math
-from wpilib import PWMSparkMax, Encoder
+import ctre
+from wpilib import Encoder
 from wpimath.controller import PIDController, ProfiledPIDController, SimpleMotorFeedforwardMeters
 from wpimath.trajectory import TrapezoidProfile
 from wpimath.geometry import Rotation2d
@@ -61,8 +62,11 @@ class SwerveModule:
         self.m_turningEncoder = Encoder(turningEncoderChannelA, turningEncoderChannelB)
         self.m_drivingEncoder = Encoder(driveEncoderChannelA, driveEncoderChannelB)
 
-        self.m_driveMotor = PWMSparkMax(driveMotorChannel)
-        self.m_turningMotor = PWMSparkMax(turningMotorChannel)
+        self.m_driveMotor = ctre.WPI_TalonFX(driveMotorChannel)
+        self.m_turningMotor = ctre.WPI_TalonFX(turningMotorChannel)
+
+        self.m_driveMotor.configSelectedFeedbackSensor(ctre.FeedbackDevice.IntegratedSensor)
+        self.m_turningMotor.configSelectedFeedbackSensor(ctre.FeedbackDevice.IntegratedSensor)
 
         # Set the distance per pulse for the drive encoder. We can simply use the
         # distance traveled for one rotation of the wheel divided by the encoder
@@ -96,8 +100,8 @@ class SwerveModule:
   """
 
     def getPosition(self):
-        return SwerveModulePosition(self.m_driveEncoder.getDistance(), Rotation2d(self.m_turningEncoder.getDistance()))
-
+        #return SwerveModulePosition(self.m_driveEncoder.getDistance(), Rotation2d(self.m_turningEncoder.getDistance()))
+        pass
     """
   * Sets the desired state for the module.
   *

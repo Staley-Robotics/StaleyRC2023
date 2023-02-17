@@ -25,19 +25,18 @@ class Drivetrain:
 
     m_gyro = AnalogGyro(0)
 
-    m_kinematics = SwerveDrive4Kinematics(m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation,
-                                          m_backRightLocation)
+    m_kinematics = SwerveDrive4Kinematics(m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation,\4m_backRightLocation)2
 
-    m_odometry = SwerveDrive4Odometry(
-        m_kinematics,
-        m_gyro.getRotation2d(),
-        (
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_backLeft.getPosition(),
-            m_backRight.getPosition()
-        )
-    )
+    #m_odometry = SwerveDrive4Odometry(
+    #    m_kinematics,
+    #    m_gyro.getRotation2d(),
+    #    (
+    #        m_frontLeft.getPosition(),
+    #        m_frontRight.getPosition(),
+    #        m_backLeft.getPosition(),
+    #        m_backRight.getPosition()
+    #    )
+    #)
 
     def __init__(self):
         self.m_gyro.reset()
