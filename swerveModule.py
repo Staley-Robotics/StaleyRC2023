@@ -6,6 +6,7 @@ from wpimath.trajectory import TrapezoidProfile
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
 
+
 kMaxSpeed = 2
 kMaxSpeedX = 2
 kMaxSpeedY = 2

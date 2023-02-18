@@ -9,7 +9,7 @@ class Robot(wpilib.TimedRobot):
         print("Robot Initialized")
         self.controller1 = wpilib.XboxController(0)
         self.controller2 = wpilib.XboxController(1)
-        self.arm = ctre.WPI_VictorSPX(11)
+        #self.arm = ctre.WPI_VictorSPX(11)
         #self.kin = SwerveDrive4Kinematics()
         #self.swerve = SwerveDrive4Odometry(self.kin, Rotation2d(0, 0), Pose2d())
         self.swerve = drivetrain.Drivetrain()
@@ -25,7 +25,7 @@ class Robot(wpilib.TimedRobot):
 
     def teleopInit(self):
         print("Started Teleop")
-        self.arm.set(self.controller1.getRightY() * 0.3)
+       # self.arm.set(self.controller1.getRightY() * 0.3)
 
 
     def teleopPeriodic(self):
