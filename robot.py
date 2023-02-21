@@ -1,14 +1,16 @@
 import math
 
-import ctre
+from ctre import WPI_TalonFX, WPI_VictorSPX, WPI_TalonSRX
 import wpilib
 import wpilib.drive
 import wpimath
 import wpimath.controller
 import wpimath.trajectory
 
+import arm
 from drivetrain import Drivetrain
 from arm import ArmedExtension
+from arm import ArmedRotation
 from pcm import Pcm
 from claw import Claw
 
@@ -22,7 +24,7 @@ class Robot(wpilib.TimedRobot):
     pcm: Pcm
     claw: Claw
 
-    extendMotor: ctre.WPI_TalonSRX
+    extendMotor: WPI_TalonSRX
     extendPID: wpimath.controller.PIDController
     extendFeedForward: wpimath.controller.SimpleMotorFeedforwardMeters
 
@@ -32,7 +34,7 @@ class Robot(wpilib.TimedRobot):
         self.controller1 = wpilib.XboxController(0)
         self.controller2 = wpilib.XboxController(1)
         self.drivetrain = Drivetrain()
-        self.arm = ArmedExtension(ctre.WPI_TalonFX(11), ctre.WPI_VictorSPX(9))
+        self.arm = ArmedExtension(WPI_TalonFX(11), WPI_VictorSPX(9))
         self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
         self.claw = Claw(self.pcm.getSolendoid(1))
 
@@ -71,6 +73,7 @@ class Robot(wpilib.TimedRobot):
 
     def testInit(self):
 
+        """
         self.extendMotor = ctre.WPI_TalonSRX(31)
         self.extendMotor.configSelectedFeedbackSensor(ctre.FeedbackDevice.QuadEncoder, 0, 0)
         self.extendMotor.getSensorCollection()
@@ -85,10 +88,11 @@ class Robot(wpilib.TimedRobot):
         self.extendFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(1, 0.5)
 
         # distance times radius of wheel
-        # feedforward.calculate(1, 2, 3);
+        # feedforward.calculate(1, 2, 3)
+        """
 
     def testPeriodic(self):
-
+        """
         count = self.extendMotor.getSelectedSensorPosition()
 
         if self.controller1.getLeftBumperPressed() and count < 16384:
@@ -104,7 +108,10 @@ class Robot(wpilib.TimedRobot):
             print(f"counts = {count}")
             Volts = self.extendPID.calculate(count, 0)
             self.extendMotor.setVoltage(max(Volts, -1))
-            print(Volts)
+            print(Volts)"""
+        ArmedRotation.loop(ArmedRotation, self.controller1.getAButtonPressed(),
+                           self.controller1.getBButtonPressed(),
+                           self.controller1.getLeftY())
 
 
 if __name__ == "__main__":

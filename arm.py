@@ -13,7 +13,8 @@ from ctre import FeedbackDevice, ControlMode
 
 
 class ArmedExtension:
-    liftMotor: ctre.WPIself.armRFX = None
+    liftMotor: ctre.WPI_VictorSPX = None
+    # liftMotor: ctre.WPI_TalonFX = None
     extendMotor: ctre.VictorSPX = None
     liftSensors: ctre.TalonFXSensorCollection = None
     startPos = None
@@ -68,7 +69,8 @@ class ArmedRotation:
         self.kSensorPhase = True
         self.kMotorInvert = False
 
-        self.armR = ctre.WPIself.armRFX(14)  # arm rotation motor number
+        # self.armR = ctre.WPI_TalonFX(14)  # arm rotation motor number
+        self.armR = ctre.WPI_TalonSRX(31)
         self.armR.configFactoryDefault()
         # set stuff
         self.armR.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, self.kPIDLoopIdx,
