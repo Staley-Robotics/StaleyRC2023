@@ -1,5 +1,4 @@
 import math
-from enum import Enum
 
 import ctre
 import wpilib
@@ -13,13 +12,6 @@ from arm import ArmedExtension
 from pcm import Pcm
 from claw import Claw
 
-
-class State(Enum):
-    stick = -1
-    hub = 0
-    hybrid = 1
-    mid = 2
-    tree = 3
 
 class Robot(wpilib.TimedRobot):
     time: wpilib.Timer
@@ -84,24 +76,16 @@ class Robot(wpilib.TimedRobot):
         self.extendMotor.getSensorCollection()
         self.extendMotor.setSelectedSensorPosition(0, 0, 0)
 
-        '''
         self.extendMotor.configForwardSoftLimitThreshold(16384, 0)
         self.extendMotor.configForwardSoftLimitEnable(True, 0)
         self.extendMotor.configReverseSoftLimitThreshold(-1, 0)
         self.extendMotor.configReverseSoftLimitEnable(True, 0)
-        '''
 
-        '''
-        profile = wpimath.trajectory.TrapezoidProfile.Constraints(math.pi, 2 * math.pi)
-        self.extendPID = wpimath.controller.ProfiledPIDController(0.5, 0, 0, profile)
-        '''
-        # self.extendPID.setTolerance(0.1, 0.1)
-        # self.extendPID.setIntegratorRange(-0.25, 0.25)
-        # self.extendPID.setSetpoint()
-        self.goal = 0
-        self.state = State.hub
-        self.to = 0
-        self.limiter = 5
+        self.extendPID = wpimath.controller.PIDController(1, 0, 0)
+        self.extendFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(1, 0.5)
+
+        # distance times radius of wheel
+        # feedforward.calculate(1, 2, 3);
 
     def testPeriodic(self):
 
