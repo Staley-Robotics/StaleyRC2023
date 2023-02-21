@@ -1,11 +1,11 @@
 import math
 import ctre
+import wpilib
 from wpilib import Encoder
 from wpimath.controller import PIDController, ProfiledPIDController, SimpleMotorFeedforwardMeters
 from wpimath.trajectory import TrapezoidProfile
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
-
 
 kMaxSpeed = 2
 kMaxSpeedX = 2
@@ -61,7 +61,7 @@ class SwerveModule:
                  turningEncoderChannelA,
                  turningEncoderChannelB):
         self.m_turningEncoder = Encoder(turningEncoderChannelA, turningEncoderChannelB)
-        self.m_drivingEncoder = Encoder(driveEncoderChannelA, driveEncoderChannelB)
+        self.m_driveEncoder = Encoder(driveEncoderChannelA, driveEncoderChannelB)
 
         self.m_driveMotor = ctre.WPI_TalonFX(driveMotorChannel)
         self.m_turningMotor = ctre.WPI_TalonFX(turningMotorChannel)
@@ -72,6 +72,7 @@ class SwerveModule:
         # Set the distance per pulse for the drive encoder. We can simply use the
         # distance traveled for one rotation of the wheel divided by the encoder
         # resolution.
+
         try:
             self.m_driveEncoder.setDistancePerPulse(2 * math.pi * kWheelRadius / kEncoderResolution)
 
@@ -101,8 +102,9 @@ class SwerveModule:
   """
 
     def getPosition(self):
-        #return SwerveModulePosition(self.m_driveEncoder.getDistance(), Rotation2d(self.m_turningEncoder.getDistance()))
+        # return SwerveModulePosition(self.m_driveEncoder.getDistance(), Rotation2d(self.m_turningEncoder.getDistance()))
         pass
+
     """
   * Sets the desired state for the module.
   *
@@ -111,17 +113,15 @@ class SwerveModule:
 
     def setDesiredState(self, desiredState):
         # Optimize the reference state to avoid spinning further than 90 degrees
-        state = SwerveModuleState.optimize(desiredState, Rotation2d(self.m_turningEncoder.getDistance()))
+        state = SwerveModuleState.optimize(desiredState, Rotation2d(self.m_turningMotor.getSelectedSensorPosition() * 2 * math.pi / 2048))
 
         # Calculate the drive output from the drive PID controller.
-        driveOutput = self.m_drivePIDController.calculate(self.m_driveEncoder.getRate(), state.speed)
+        driveOutput = self.m_drivePIDController.calculate(self.m_driveMotor.getSelectedSensorVelocity() * 0.05 * 2 * math.pi / 2048, state.speed)
 
         driveFeedforward = self.m_driveFeedforward.calculate(state.speed)
 
         # Calculate the turning motor output from the turning PID controller.
-        turnOutput = self.m_turningPIDController.calculate(self.m_turningEncoder.getDistance(),
-                                                           state.angle.getRadians())
-
+        turnOutput = self.m_turningPIDController.calculate(self.m_turningMotor.getSelectedSensorPosition() * 2 * math.pi / 2048, state.angle.radians())
         turnFeedforward = self.m_turnFeedforward.calculate(self.m_turningPIDController.getSetpoint().velocity)
 
         self.m_driveMotor.setVoltage(driveOutput + driveFeedforward)

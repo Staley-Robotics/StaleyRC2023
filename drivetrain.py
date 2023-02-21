@@ -1,6 +1,8 @@
 import math
 
+import wpilib
 from wpilib import AnalogGyro
+from wpilib import XboxController
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveDrive4Kinematics
 
@@ -18,10 +20,10 @@ class Drivetrain:
     m_backLeftLocation = Translation2d(-0.381, 0.381)
     m_backRightLocation = Translation2d(-0.381, -0.381)
 
-    m_frontLeft = SwerveModule(1, 2, 0, 1, 2, 3)
-    m_frontRight = SwerveModule(3, 4, 4, 5, 6, 7)
-    m_backLeft = SwerveModule(5, 6, 8, 9, 10, 11)
-    m_backRight = SwerveModule(7, 8, 12, 13, 14, 15)
+    m_frontLeft = SwerveModule(7, 8, 0, 1, 2, 3)
+    m_frontRight = SwerveModule(5, 6, 4, 5, 6, 7)
+    m_backLeft = SwerveModule(3, 4, 8, 9, 10, 11)
+    m_backRight = SwerveModule(1, 2, 12, 13, 14, 15)
 
     m_gyro = AnalogGyro(0)
 
@@ -57,7 +59,7 @@ class Drivetrain:
         else:
             driveMovement = ChassisSpeeds(xSpeed, ySpeed, rot)
 
-        swerveModuleStates = m_kinematics.toSwerveModuleStates(driveMovement, '''NO CLUE WHAT TO PUT HERE''')
+        swerveModuleStates = m_kinematics.toSwerveModuleStates(driveMovement, Translation2d(0, 0))
         SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed)
         self.m_frontLeft.setDesiredState(swerveModuleStates[0])
         self.m_frontRight.setDesiredState(swerveModuleStates[1])

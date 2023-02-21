@@ -1,3 +1,5 @@
+import math
+import wpimath
 import drivetrain
 from swerve import *
 import wpilib
@@ -29,9 +31,14 @@ class Robot(wpilib.TimedRobot):
 
 
     def teleopPeriodic(self):
-        leftx1 = self.controller1.getleftX()
-        lefty1 = self.controller1.getLeftY()
-        rightx1 = self.controller1.getRightX()
+        def clamp(num, min_value):
+            if abs(num) < min_value:
+                return 0
+            return num
+
+        leftx1 = wpimath.applyDeadband(self.controller1.getLeftX(), 0.05, 1)
+        lefty1 = wpimath.applyDeadband(self.controller1.getLeftY(), 0.05, 1)
+        rightx1 = wpimath.applyDeadband(self.controller1.getRightX(), 0.05, 1)
 
         self.swerve.drive(leftx1, lefty1, rightx1, True)
 
