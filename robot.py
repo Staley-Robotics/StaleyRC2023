@@ -7,10 +7,8 @@ import wpimath
 import wpimath.controller
 import wpimath.trajectory
 
-import arm
 from drivetrain import Drivetrain
-from arm import ArmedExtension
-from arm import ArmedRotation
+from arm import ArmedExtension, ArmedRotation
 from pcm import Pcm
 from claw import Claw
 
@@ -21,6 +19,7 @@ class Robot(wpilib.TimedRobot):
     controller2: wpilib.XboxController
     drivetrain: Drivetrain
     arm: ArmedExtension
+    arm_rot: ArmedRotation
     pcm: Pcm
     claw: Claw
 
@@ -35,6 +34,7 @@ class Robot(wpilib.TimedRobot):
         self.controller2 = wpilib.XboxController(1)
         self.drivetrain = Drivetrain()
         self.arm = ArmedExtension(WPI_TalonFX(11), WPI_VictorSPX(9))
+        self.arm_rot = ArmedRotation()
         self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
         self.claw = Claw(self.pcm.getSolendoid(1))
 
@@ -109,9 +109,7 @@ class Robot(wpilib.TimedRobot):
             Volts = self.extendPID.calculate(count, 0)
             self.extendMotor.setVoltage(max(Volts, -1))
             print(Volts)"""
-        ArmedRotation.loop(ArmedRotation, self.controller1.getAButtonPressed(),
-                           self.controller1.getBButtonPressed(),
-                           self.controller1.getLeftY())
+        self.arm_rot.loop(self.controller1.getLeftY()*0.05)
 
 
 if __name__ == "__main__":
