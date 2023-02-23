@@ -59,17 +59,17 @@ class ArmedRotation:
     def __init__(self):
         # Variables for use later in code or init; Listed here for easier editing
         self.BayPos = 0
-        self.topPos = 4096
-        self.midPos = 4096*2
-        self.lowPos = 4096*3
+        self.topPos = 4096*3
+        self.midPos = 4096*7
+        self.lowPos = 4096*10
         self.kTimeoutMs = 20
         self.kPIDLoopIdx = 0
         self.kSlotIdx = 0
-        self.kGains = Gains(0.015, 0.0, 1.0, 0.0, 0, 1.0)
+        self.kGains = Gains(0.0312, 0.0, 1.0, 0.0, 0, 1.0)
         self.kSensorPhase = True
         self.kMotorInvert = False
 
-        self.armR = ctre.WPI_TalonFX(7)  # arm rotation motor number
+        self.armR = ctre.WPI_TalonFX(7, 'canivore1')  # arm rotation motor number
         self.armR.configFactoryDefault()
 
         # set sensor
@@ -125,6 +125,8 @@ class ArmedRotation:
             targetPositionRotations = self.midPos
         elif pos == 3:
             targetPositionRotations = self.topPos
+        self.armR.set(ControlMode.Position, targetPositionRotations)
+        print(self.armR.getSelectedSensorPosition())
 
 
 class Gains:

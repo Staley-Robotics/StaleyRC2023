@@ -72,7 +72,7 @@ class Robot(wpilib.TimedRobot):
         self.time.stop()
 
     def testInit(self):
-
+        """
         self.extendMotor = WPI_TalonSRX(31)
         self.extendMotor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
         self.extendMotor.getSensorCollection()
@@ -88,8 +88,11 @@ class Robot(wpilib.TimedRobot):
 
         # distance times radius of wheel
         # feedforward.calculate(1, 2, 3)
+        """
+        self.pos = 0
 
     def testPeriodic(self):
+        """
 
         count = self.extendMotor.getSelectedSensorPosition()
 
@@ -107,18 +110,17 @@ class Robot(wpilib.TimedRobot):
             Volts = self.extendPID.calculate(count, 0)
             self.extendMotor.setVoltage(max(Volts, -1))
             print(Volts)
+        """
         # self.arm_rot.loop(self.controller1.getLeftY())
         if self.controller1.getAButtonPressed():
-            pos = 0
+            self.pos = 0
         elif self.controller1.getBButtonPressed():
-            pos = 1
+            self.pos = 1
         elif self.controller1.getYButtonPressed():
-            pos = 2
+            self.pos = 2
         elif self.controller1.getXButtonPressed():
-            pos = 3
-        else:
-            pos = 0
-        self.arm_rot.loop(pos)
+            self.pos = 3
+        self.arm_rot.loop(self.pos)
 
 
 if __name__ == "__main__":
