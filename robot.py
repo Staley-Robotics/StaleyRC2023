@@ -1,6 +1,6 @@
 import math
 
-from ctre import WPI_TalonFX, WPI_VictorSPX, WPI_TalonSRX
+from ctre import WPI_TalonFX, WPI_VictorSPX, WPI_TalonSRX, FeedbackDevice
 import wpilib
 import wpilib.drive
 import wpimath
@@ -33,10 +33,10 @@ class Robot(wpilib.TimedRobot):
         self.controller1 = wpilib.XboxController(0)
         self.controller2 = wpilib.XboxController(1)
         self.drivetrain = Drivetrain()
-        self.arm = ArmedExtension(WPI_TalonFX(11), WPI_VictorSPX(9))
+        # self.arm = ArmedExtension(WPI_TalonFX(11), WPI_VictorSPX(9))
         self.arm_rot = ArmedRotation()
-        self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
-        self.claw = Claw(self.pcm.getSolendoid(1))
+        # self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
+        # self.claw = Claw(self.pcm.getSolendoid(1))
 
         try:
             pdp = wpilib.PowerDistribution(0, wpilib.PowerDistribution.ModuleType.kCTRE)
@@ -73,9 +73,8 @@ class Robot(wpilib.TimedRobot):
 
     def testInit(self):
 
-        """
-        self.extendMotor = ctre.WPI_TalonSRX(31)
-        self.extendMotor.configSelectedFeedbackSensor(ctre.FeedbackDevice.QuadEncoder, 0, 0)
+        self.extendMotor = WPI_TalonSRX(31)
+        self.extendMotor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
         self.extendMotor.getSensorCollection()
         self.extendMotor.setSelectedSensorPosition(0, 0, 0)
 
@@ -89,10 +88,9 @@ class Robot(wpilib.TimedRobot):
 
         # distance times radius of wheel
         # feedforward.calculate(1, 2, 3)
-        """
 
     def testPeriodic(self):
-        """
+
         count = self.extendMotor.getSelectedSensorPosition()
 
         if self.controller1.getLeftBumperPressed() and count < 16384:
@@ -108,8 +106,19 @@ class Robot(wpilib.TimedRobot):
             print(f"counts = {count}")
             Volts = self.extendPID.calculate(count, 0)
             self.extendMotor.setVoltage(max(Volts, -1))
-            print(Volts)"""
-        self.arm_rot.loop(self.controller1.getLeftY()*0.05)
+            print(Volts)
+        # self.arm_rot.loop(self.controller1.getLeftY())
+        if self.controller1.getAButtonPressed():
+            pos = 0
+        elif self.controller1.getBButtonPressed():
+            pos = 1
+        elif self.controller1.getYButtonPressed():
+            pos = 2
+        elif self.controller1.getXButtonPressed():
+            pos = 3
+        else:
+            pos = 0
+        self.arm_rot.loop(pos)
 
 
 if __name__ == "__main__":

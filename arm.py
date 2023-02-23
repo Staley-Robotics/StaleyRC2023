@@ -59,22 +59,21 @@ class ArmedRotation:
     def __init__(self):
         # Variables for use later in code or init; Listed here for easier editing
         self.BayPos = 0
-        self.topPos = 245
-        self.midPos = 260
-        self.lowPos = 300
+        self.topPos = 4096
+        self.midPos = 4096*2
+        self.lowPos = 4096*3
         self.kTimeoutMs = 20
         self.kPIDLoopIdx = 0
         self.kSlotIdx = 0
-        self.kGains = Gains(0.15, 0.0, 1.0, 0.0, 0, 1.0)
+        self.kGains = Gains(0.015, 0.0, 1.0, 0.0, 0, 1.0)
         self.kSensorPhase = True
         self.kMotorInvert = False
 
-        # self.armR = ctre.WPI_TalonFX(14)  # arm rotation motor number
-        self.armR = ctre.WPI_TalonSRX(31)
+        self.armR = ctre.WPI_TalonFX(7)  # arm rotation motor number
         self.armR.configFactoryDefault()
 
         # set sensor
-        self.armR.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, self.kPIDLoopIdx,
+        self.armR.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, self.kPIDLoopIdx,
                                                self.kTimeoutMs)
         # correct the motor encoder just in case
         self.armR.setSensorPhase(self.kSensorPhase)
@@ -95,9 +94,10 @@ class ArmedRotation:
         self.armR.config_kI(self.kPIDLoopIdx, self.kGains.kI, self.kTimeoutMs)
         self.armR.config_kD(self.kPIDLoopIdx, self.kGains.kD, self.kTimeoutMs)
 
+        '''
         # Grab the 360 degree position of the MagEncoder's absolute position, and initially set the relative sensor
         # to match
-        absolutePosition = self.armR.getSensorCollection().getPulseWidthPosition()
+        absolutePosition = self.armR.getSensorCollection().getIntegratedSensorAbsolutePosition()
 
         # Mask out overflows, keep bottom 12 bits
         absolutePosition &= 0xFFF
@@ -105,15 +105,26 @@ class ArmedRotation:
             absolutePosition *= -1
         if self.kMotorInvert:
             absolutePosition *= -1
+            '''
         # Set the quadrature(relative) sensor to match absolutes
         self.armR.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
-
-    def loop(self, leftYStick):
+        
+    '''def loop(self, leftYStick):
         # 10 Rotations * 4096 u/rev in either direction
         targetPositionRotations = leftYStick * 4096 * 10
-        #targetPositionRotations = 0
+        # targetPositionRotations = 0
         self.armR.set(ControlMode.Position, targetPositionRotations)
-        print(targetPositionRotations)
+        print(targetPositionRotations)'''
+
+    def loop(self, pos):
+        if pos == 0:
+            targetPositionRotations = self.BayPos
+        elif pos == 1:
+            targetPositionRotations = self.lowPos
+        elif pos == 2:
+            targetPositionRotations = self.midPos
+        elif pos == 3:
+            targetPositionRotations = self.topPos
 
 
 class Gains:
