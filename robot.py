@@ -112,6 +112,8 @@ class Robot(wpilib.TimedRobot):
             print(Volts)
         """
         # self.arm_rot.loop(self.controller1.getLeftY())
+
+
         if self.controller1.getAButtonPressed():
             self.pos = 0
         elif self.controller1.getBButtonPressed():
@@ -120,6 +122,10 @@ class Robot(wpilib.TimedRobot):
             self.pos = 2
         elif self.controller1.getXButtonPressed():
             self.pos = 3
+        elif self.controller1.getLeftBumperPressed():
+            self.pos = 4
+        elif self.controller1.getRightBumperPressed():
+            self.pos = 5
         self.arm_rot.loop(self.pos)
 
 
