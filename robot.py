@@ -18,7 +18,7 @@ class Robot(wpilib.TimedRobot):
     controller1: wpilib.XboxController
     controller2: wpilib.XboxController
     drivetrain: Drivetrain
-    arm: ArmedExtension
+    arm_ext: ArmedExtension
     arm_rot: ArmedRotation
     pcm: Pcm
     claw: Claw
@@ -35,6 +35,7 @@ class Robot(wpilib.TimedRobot):
         self.drivetrain = Drivetrain()
         # self.arm = ArmedExtension(WPI_TalonFX(11), WPI_VictorSPX(9))
         self.arm_rot = ArmedRotation()
+        self.arm_ext = ArmedExtension()
         # self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
         # self.claw = Claw(self.pcm.getSolendoid(1))
 
@@ -72,47 +73,11 @@ class Robot(wpilib.TimedRobot):
         self.time.stop()
 
     def testInit(self):
-        """
-        self.extendMotor = WPI_TalonSRX(31)
-        self.extendMotor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0)
-        self.extendMotor.getSensorCollection()
-        self.extendMotor.setSelectedSensorPosition(0, 0, 0)
-
-        self.extendMotor.configForwardSoftLimitThreshold(16384, 0)
-        self.extendMotor.configForwardSoftLimitEnable(True, 0)
-        self.extendMotor.configReverseSoftLimitThreshold(-1, 0)
-        self.extendMotor.configReverseSoftLimitEnable(True, 0)
-
-        self.extendPID = wpimath.controller.PIDController(1, 0, 0)
-        self.extendFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(1, 0.5)
-
-        # distance times radius of wheel
-        # feedforward.calculate(1, 2, 3)
-        """
         self.pos = 0
 
     def testPeriodic(self):
-        """
-
-        count = self.extendMotor.getSelectedSensorPosition()
-
-        if self.controller1.getLeftBumperPressed() and count < 16384:
-
-            # self.extendMotor.set(self.controller1.getLeftY())
-            print(f"counts = {count}")
-            Volts = self.extendPID.calculate(count, 8 * math.pi)
-            self.extendMotor.setVoltage(min(Volts, 1))
-            print(Volts)
-
-        elif self.controller1.getRightBumperPressed() and count > 0:
-
-            print(f"counts = {count}")
-            Volts = self.extendPID.calculate(count, 0)
-            self.extendMotor.setVoltage(max(Volts, -1))
-            print(Volts)
-        """
         # self.arm_rot.loop(self.controller1.getLeftY())
-
+        # self.arm_ext.extendLoop(self.controller1.getLeftY())
 
         if self.controller1.getAButtonPressed():
             self.pos = 0
@@ -122,10 +87,6 @@ class Robot(wpilib.TimedRobot):
             self.pos = 2
         elif self.controller1.getXButtonPressed():
             self.pos = 3
-        elif self.controller1.getLeftBumperPressed():
-            self.pos = 4
-        elif self.controller1.getRightBumperPressed():
-            self.pos = 5
         self.arm_rot.loop(self.pos)
 
 

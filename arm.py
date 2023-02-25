@@ -13,63 +13,85 @@ from ctre import FeedbackDevice, ControlMode
 
 
 class ArmedExtension:
-    liftMotor: ctre.WPI_VictorSPX = None
-    # liftMotor: ctre.WPI_TalonFX = None
-    extendMotor: ctre.VictorSPX = None
-    liftSensors: ctre.TalonFXSensorCollection = None
-    startPos = None
-    armMath = None
+    def __init__(self):
+        # Variables for use later in code or init; Listed here for easier editing
+        self.BayPos = 0  # tune for extension
+        self.lowPos = -6127  # tune for extension
+        self.topPos = -30974.0  # tune for extension
+        self.midPos = int((self.topPos - self.lowPos) / 2)  # tune for extension
+        self.kTimeoutMs = 20
+        self.kPIDLoopIdx = 0
+        self.kSlotIdx = 0
+        self.kGains = Gains(0.1, 0.0, 1.0, 0.0, 0, 1.0)
+        self.kSensorPhase = True
+        self.kMotorInvert = False
 
-    def __init__(self, lMotor, eMotor):
-        self.liftMotor = lMotor
-        self.extendMotor = eMotor
-        self.liftSensors = self.liftMotor.getSensorCollection()
-        self.startPos = self.liftSensors.getIntegratedSensorPosition()
-        self.armMath = wpimath.controller.ArmFeedforward(kS=0, kG=0, kV=0, kA=0)
+        self.armR = ctre.WPI_TalonSRX(31)  # arm extension talon srx number 9
+        self.armR.configFactoryDefault()
 
-    def update(self, controller2: wpilib.XboxController = None):
-        pass
+        # set sensor
+        self.armR.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, self.kPIDLoopIdx,
+                                               self.kTimeoutMs)
+        # correct the motor encoder just in case
+        self.armR.setSensorPhase(self.kSensorPhase)
+        self.armR.setInverted(self.kMotorInvert)
 
-    def lift(self, direction):
-        __posValue__ = self.liftSensors.getIntegratedSensorPosition()
-        __rValue__ = math.radians(__posValue__)
-        if direction > 0:
-            __rValue__ = math.radians(45)
-        elif direction < 0:
-            __rValue__ = math.radians(self.startPos)
-        volts = self.armMath.calculate(angle=__rValue__, velocity=direction)
-        self.liftMotor.set(volts)
+        # set peak and nominal outputs
+        self.armR.configNominalOutputForward(0, self.kTimeoutMs)
+        self.armR.configNominalOutputReverse(0, self.kTimeoutMs)
+        self.armR.configPeakOutputForward(1, self.kTimeoutMs)
+        self.armR.configPeakOutputReverse(-1, self.kTimeoutMs)
 
-    def extend(self):
-        pass
+        # allowed closed loop error, it will be neutral within this range
+        self.armR.configAllowableClosedloopError(0, self.kPIDLoopIdx, self.kTimeoutMs)
 
-    def setLiftPhysics(self, kS=0, kG=0, kV=0, kA=0):
-        self.armMath.kS = kS
-        self.armMath.kG = kG
-        self.armMath.kV = kV
-        self.armMath.kA = kA
+        # setting the PID settings
+        self.armR.config_kF(self.kPIDLoopIdx, self.kGains.kF, self.kTimeoutMs)
+        self.armR.config_kP(self.kPIDLoopIdx, self.kGains.kP, self.kTimeoutMs)
+        self.armR.config_kI(self.kPIDLoopIdx, self.kGains.kI, self.kTimeoutMs)
+        self.armR.config_kD(self.kPIDLoopIdx, self.kGains.kD, self.kTimeoutMs)
+
+        # Set the quadrature(relative) sensor to match absolutes
+        self.armR.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
+
+    # def extendLoop(self, leftYStick):
+        # # 10 Rotations * 4096 u/rev in either direction
+        # # targetPositionRotations = leftYStick * 4096 * 5
+        # # self.armR.set(ControlMode.Position, targetPositionRotations)
+        # print(self.armR.getSelectedSensorPosition())
+        # self.armR.set(leftYStick)
+
+    def extendLoop(self, pos):
+        if pos == 0:  # A
+            targetPositionRotations = self.BayPos
+        elif pos == 1:  # B
+            targetPositionRotations = self.lowPos
+        elif pos == 2:  # Y
+            targetPositionRotations = self.midPos
+        elif pos == 3:  # X
+            targetPositionRotations = self.topPos
+        self.armR.set(ControlMode.Position, targetPositionRotations)
+        print("Encoder " + str(self.armR.getSelectedSensorPosition()))
+        print("Target " + str(targetPositionRotations))
+        print("Screw Up Amount " + str(abs(targetPositionRotations - self.armR.getSelectedSensorPosition())))
 
 
 class ArmedRotation:
-    """
-    TODO
-        implement arm move function
-    """
 
     def __init__(self):
         # Variables for use later in code or init; Listed here for easier editing
         self.BayPos = 0
-        self.topPos = 13481.0
-        self.midPos = (13481-1024)/2
         self.lowPos = 1024
+        self.midPos = (13481 - 1024) / 2
+        self.topPos = 13481.0
         self.kTimeoutMs = 20
         self.kPIDLoopIdx = 0
         self.kSlotIdx = 0
-        self.kGains = Gains(0.0312, 0.0, 1.0, 0.0, 0, 1.0)
+        self.kGains = Gains(0.1, 0.0, 1.0, 0.0, 0, 1.0)
         self.kSensorPhase = True
         self.kMotorInvert = False
 
-        self.armR = ctre.WPI_TalonFX(9, 'rio')  # arm rotation motor number
+        self.armR = ctre.WPI_TalonFX(9, 'rio')  # arm rotation motor number 9
         self.armR.configFactoryDefault()
 
         # set sensor
@@ -94,43 +116,29 @@ class ArmedRotation:
         self.armR.config_kI(self.kPIDLoopIdx, self.kGains.kI, self.kTimeoutMs)
         self.armR.config_kD(self.kPIDLoopIdx, self.kGains.kD, self.kTimeoutMs)
 
-        '''
-        # Grab the 360 degree position of the MagEncoder's absolute position, and initially set the relative sensor
-        # to match
-        absolutePosition = self.armR.getSensorCollection().getIntegratedSensorAbsolutePosition()
-
-        # Mask out overflows, keep bottom 12 bits
-        absolutePosition &= 0xFFF
-        if self.kSensorPhase:
-            absolutePosition *= -1
-        if self.kMotorInvert:
-            absolutePosition *= -1
-            '''
         # Set the quadrature(relative) sensor to match absolutes
         self.armR.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
 
     # def loop(self, leftYStick):
-        # 10 Rotations * 4096 u/rev in either direction
-        # targetPositionRotations = leftYStick * 4096 * 10
-        # targetPositionRotations = 0
-        # self.armR.set(ControlMode.Position, targetPositionRotations)
-        # print(self.armR.getSelectedSensorPosition())
-
+    #     # 10 Rotations * 4096 u/rev in either direction
+    #     targetPositionRotations = leftYStick * 4096 * 10
+    #     self.armR.set(ControlMode.Position, targetPositionRotations)
+    #     print(self.armR.getSelectedSensorPosition())
 
     def loop(self, pos):
-        if pos == 0:
+        if pos == 0:  # A
             targetPositionRotations = self.BayPos
-        elif pos == 1:
+        elif pos == 1:  # B
             targetPositionRotations = self.lowPos
-        elif pos == 2:
+        elif pos == 2:  # Y
             targetPositionRotations = self.midPos
-        elif pos == 3:
+        elif pos == 3:  # X
             targetPositionRotations = self.topPos
-        elif pos == 4:
-            stored = self.armR.getSelectedSensorPosition()
-        elif pos == 5:
+
         self.armR.set(ControlMode.Position, targetPositionRotations)
-        print(self.armR.getSelectedSensorPosition())
+        print("Encoder " + str(self.armR.getSelectedSensorPosition()))
+        print("Target " + str(targetPositionRotations))
+        print("Screw Up Amount " + str(abs(targetPositionRotations - self.armR.getSelectedSensorPosition())))
 
 
 class Gains:
