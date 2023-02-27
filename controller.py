@@ -9,9 +9,13 @@ class Controller(XboxController):
         super().__init__(port)
         self.state = inherited_state
         controller = self.state.getTable("controller")
-        self.leftX = controller.getFloatTopic("leftX").publish()
-        self.leftY = controller.getFloatTopic("leftY").publish()
+        self.LX = controller.getFloatTopic("LX").publish()
+        self.LY = controller.getFloatTopic("LY").publish()
+        self.RX = controller.getFloatTopic("RX").publish()
+        self.RY = controller.getFloatTopic("RY").publish()
 
     def update(self):
-        self.leftX.set(self.getLeftX())
-        self.leftY.set(self.getLeftY())
+        self.LX.set(self.getLeftX())
+        self.LY.set(self.getLeftY())
+        self.RX.set(self.getRightX())
+        self.RY.set(self.getRightY())

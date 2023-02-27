@@ -1,6 +1,6 @@
 [
   {
-    "name": "drivetrain/modules/left/0",
+    "name": "drivetrain/tank/modules/left/0",
     "type": "int",
     "value": 1,
     "properties": {
@@ -8,7 +8,7 @@
     }
   },
   {
-    "name": "drivetrain/modules/left/1",
+    "name": "drivetrain/tank/modules/left/1",
     "type": "int",
     "value": 2,
     "properties": {
@@ -16,7 +16,7 @@
     }
   },
   {
-    "name": "drivetrain/modules/right/0",
+    "name": "drivetrain/tank/modules/right/0",
     "type": "int",
     "value": 3,
     "properties": {
@@ -24,7 +24,7 @@
     }
   },
   {
-    "name": "drivetrain/modules/right/1",
+    "name": "drivetrain/tank/modules/right/1",
     "type": "int",
     "value": 4,
     "properties": {
