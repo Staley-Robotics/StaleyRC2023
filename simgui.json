@@ -1,0 +1,58 @@
+{
+  "HALProvider": {
+    "Other Devices": {
+      "Talon FX[1]": {
+        "header": {
+          "open": true
+        }
+      }
+    },
+    "PowerDistributions": {
+      "0": {
+        "PowerDistribution[0]": {
+          "open": false
+        }
+      }
+    }
+  },
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo"
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "LiveWindow": {
+        ".status": {
+          "open": false
+        }
+      },
+      "control": {
+        "open": false
+      },
+      "controller": {
+        "open": true
+      },
+      "datatable": {
+        "open": false
+      },
+      "drivetrain": {
+        "control": {
+          "open": false
+        },
+        "modules": {
+          "left": {
+            "open": false
+          },
+          "right": {
+            "open": false
+          }
+        },
+        "open": false
+      },
+      "modules": {
+        "open": false
+      }
+    }
+  }
+}

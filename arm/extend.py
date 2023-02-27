@@ -1,14 +1,14 @@
-import ctre
+from ctre import WPI_TalonFX, VictorSPX, TalonFXSensorCollection
 import wpilib
-import wpimath.units
 import wpimath.controller
+import math
 
 
-class Arm:
+class Extend:
 
-    liftMotor: ctre.WPI_TalonFX = None
-    extendMotor: ctre.VictorSPX = None
-    liftSensors: ctre.TalonFXSensorCollection = None
+    liftMotor: WPI_TalonFX = None
+    extendMotor: VictorSPX = None
+    liftSensors: TalonFXSensorCollection = None
     startPos = None
     armMath = None
 
@@ -24,11 +24,11 @@ class Arm:
 
     def lift(self, direction):
         __posValue__ = self.liftSensors.getIntegratedSensorPosition()
-        __rValue__ = wpimath.units.degreesToRadians(__posValue__)
+        __rValue__ = math.radians(__posValue__)
         if direction > 0:
-            __rValue__ = wpimath.units.degreesToRadians(45)
+            __rValue__ = math.radians(45)
         elif direction < 0:
-            __rValue__ = wpimath.units.degreesToRadians(self.startPos)
+            __rValue__ = math.radians(self.startPos)
         volts = self.armMath.calculate(angle=__rValue__, velocity=direction)
         self.liftMotor.set(volts)
 
@@ -40,4 +40,3 @@ class Arm:
         self.armMath.kG = kG
         self.armMath.kV = kV
         self.armMath.kA = kA
-        

@@ -1,75 +1,32 @@
-import ctre
-import rev
-import wpilib
-import wpilib.drive
+from wpilib import *
+from ntcore import *
 
-from drivetrain import Drivetrain
-from arm import Arm
-from pcm import Pcm
-from claw import Claw
+from controller import Controller
+from drivetrain.tank import Tank
 
 
-class Robot(wpilib.TimedRobot):
-    time: wpilib.Timer
-    controller1: wpilib.XboxController
-    controller2: wpilib.XboxController
-    drivetrain: Drivetrain
-    arm: Arm
-    pcm: Pcm
-    claw: Claw
-    testMotor: rev.CANSparkMax
+class Robot(TimedRobot):
+    time: Timer
+    state: NetworkTableInstance
+    controller: Controller
+    tank: Tank
 
     def robotInit(self):
-
-        self.time = wpilib.Timer()
-        self.controller1 = wpilib.XboxController(0)
-        self.controller2 = wpilib.XboxController(1)
-        self.drivetrain = Drivetrain()
-        self.arm = Arm(ctre.WPI_TalonFX(11), ctre.WPI_VictorSPX(9))
-        self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
-        self.claw = Claw(self.pcm.getSolendoid(1))
-
-        try:
-            pdp = wpilib.PowerDistribution(0, wpilib.PowerDistribution.ModuleType.kCTRE)
-            faults = pdp.getStickyFaults()
-            print(f'{faults.print()}')
-            pdp.clearStickyFaults()
-        except Exception as e:
-            print(e)
-
-    def autonomousInit(self):
-        self.time.reset()
-        self.time.start()
-
-    def autonomousPeriodic(self):
-        pass
-
-    def autonomousExit(self):
-        self.time.stop()
+        self.time = Timer()
+        self.state = NetworkTableInstance.getDefault()
+        self.controller = Controller(0, self.state)
+        self.tank = Tank(self.state)
 
     def teleopInit(self):
         self.time.start()
 
     def teleopPeriodic(self):
-
-        self.drivetrain.update()
-        self.arm.update()
-        self.pcm.update()
-
-        # calculationForSwerveDrive()
-
-        if self.controller1.getAButtonPressed():
-            self.claw.update()
+        self.controller.update()
+        self.tank.drive()
 
     def teleopExit(self):
         self.time.stop()
 
-    def testInit(self):
-        self.testMotor = ctre.WPI_TalonFX(9)
-
-    def testPeriodic(self):
-        self.testMotor.set(self.controller1.getLeftY() * 0.7)
-
 
 if __name__ == "__main__":
-    wpilib.run(Robot)
+    run(Robot)

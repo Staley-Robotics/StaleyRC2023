@@ -1,10 +1,10 @@
-import wpilib
+from wpilib import Solenoid
 
 
 class Claw:
-    solenoid: wpilib.Solenoid = None
+    solenoid: Solenoid = None
 
-    def __init__(self, solenoid: wpilib.Solenoid):
+    def __init__(self, solenoid: Solenoid):
         self.solenoid = solenoid
 
     def update(self):
