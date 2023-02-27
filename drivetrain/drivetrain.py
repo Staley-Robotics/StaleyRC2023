@@ -22,7 +22,7 @@ class Drivetrain:
         self.in_LX = self.state.getFloatTopic("controller/LX").subscribe(0.0)
         self.in_LY = self.state.getFloatTopic("controller/LY").subscribe(0.0)
         self.in_RX = self.state.getFloatTopic("controller/RX").subscribe(0.0)
-        self.inRY = self.state.getFloatTopic("controller/RY").subscribe(0.0)
+        self.in_RY = self.state.getFloatTopic("controller/RY").subscribe(0.0)
 
         self.throttle_multiplier = self.drivetrain.getNumber("control/throttle", 1.0)
         self.rotation_multiplier = self.drivetrain.getNumber("control/rotation", 1.0)

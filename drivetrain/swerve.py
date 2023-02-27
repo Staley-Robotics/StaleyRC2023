@@ -33,6 +33,7 @@ class Swerve(Drivetrain):
 
     def drive(self):
         speed = self.in_LY.get() * self.throttle_multiplier
-        rotation = -math.atan2(self.in_RX.get(), self.in_RY.get()) * self.rotation_multiplier
+        rotation = ((-math.atan2(self.in_RX.get(), self.in_RY.get())+(math.pi/4)) / math.pi) * self.talon_fx_revolution_steps * self.rotation_multiplier
         self.throttle_pinions.set(speed)
-        self.rotation_pinions[0].set(ControlMode.Position, rotation)
+        for pinion in self.rotation_pinions:
+            pinion.set(ControlMode.Position, rotation)

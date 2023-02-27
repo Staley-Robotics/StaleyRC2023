@@ -21,7 +21,7 @@ class Tank(Drivetrain):
                                                 WPI_TalonFX(self.drivetrain.getNumber("modules/right/1", 4), "rio"))
 
     def drive(self):
-        speed = self.throttle_input.get() * self.throttle_multiplier
-        rotation = self.rotation_input.get() * self.rotation_multiplier
+        speed = self.in_LY.get() * self.throttle_multiplier
+        rotation = self.in_LX.get() * self.rotation_multiplier
         self.leftModule.set(rotation - speed)
         self.rightModule.set(rotation + speed)
