@@ -78,17 +78,17 @@ class Robot(wpilib.TimedRobot):
     def testPeriodic(self):
         # self.arm_rot.loop(self.controller1.getLeftY())
         # self.arm_ext.extendLStick(self.controller1.getLeftY())
-        # self.arm_ext.stepExtend(self.controller1.getLeftBumperPressed(), self.controller1.getRightBumperPressed())
+        self.arm_ext.stepExtend(self.controller1.getLeftBumperPressed(), self.controller1.getRightBumperPressed())
 
-        if self.controller1.getAButtonPressed():
-            self.pos = 0
-        elif self.controller1.getBButtonPressed():
-            self.pos = 1
-        elif self.controller1.getYButtonPressed():
-            self.pos = 2
-        elif self.controller1.getXButtonPressed():
-            self.pos = 3
-        self.arm_rot.loop(self.pos)
+        # if self.controller1.getAButtonPressed():
+        #     self.pos = 0
+        # elif self.controller1.getBButtonPressed():
+        #     self.pos = 1
+        # elif self.controller1.getYButtonPressed():
+        #     self.pos = 2
+        # elif self.controller1.getXButtonPressed():
+        #     self.pos = 3
+        # self.arm_rot.loop(self.pos)
 
 
 if __name__ == "__main__":
