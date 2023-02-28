@@ -22,7 +22,7 @@ class ArmedExtension:
         self.kTimeoutMs = 20
         self.kPIDLoopIdx = 0
         self.kSlotIdx = 0
-        self.kGains = Gains(0.1, 0.0, 1.0, 0.0, 0, 1.0)
+        self.kGains = Gains(0.5, 0.0, 0.0, 0.0, 0, 0.25)
         self.kSensorPhase = True
         self.kMotorInvert = False
 
@@ -45,7 +45,7 @@ class ArmedExtension:
         # allowed closed loop error, it will be neutral within this range
         self.armR.configAllowableClosedloopError(0, self.kPIDLoopIdx, self.kTimeoutMs)
 
-        # setting the PID settings
+        # setting the PID configs
         self.armR.config_kF(self.kPIDLoopIdx, self.kGains.kF, self.kTimeoutMs)
         self.armR.config_kP(self.kPIDLoopIdx, self.kGains.kP, self.kTimeoutMs)
         self.armR.config_kI(self.kPIDLoopIdx, self.kGains.kI, self.kTimeoutMs)
@@ -54,26 +54,39 @@ class ArmedExtension:
         # Set the quadrature(relative) sensor to match absolutes
         self.armR.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
 
-    # def extendLoop(self, leftYStick):
-        # # 10 Rotations * 4096 u/rev in either direction
-        # # targetPositionRotations = leftYStick * 4096 * 5
-        # # self.armR.set(ControlMode.Position, targetPositionRotations)
-        # print(self.armR.getSelectedSensorPosition())
-        # self.armR.set(leftYStick)
+        self.armR.selectProfileSlot(0, 0)
+        self.targetPosition = 0
 
-    def extendLoop(self, pos):
-        if pos == 0:  # A
-            targetPositionRotations = self.BayPos
-        elif pos == 1:  # B
-            targetPositionRotations = self.lowPos
-        elif pos == 2:  # Y
-            targetPositionRotations = self.midPos
-        elif pos == 3:  # X
-            targetPositionRotations = self.topPos
-        self.armR.set(ControlMode.Position, targetPositionRotations)
-        print("Encoder " + str(self.armR.getSelectedSensorPosition()))
-        print("Target " + str(targetPositionRotations))
-        print("Screw Up Amount " + str(abs(targetPositionRotations - self.armR.getSelectedSensorPosition())))
+    # def extendLStick(self, leftYStick):
+    #     # 10 Rotations * 4096 u/rev in either direction
+    #     targetPositionRotations = leftYStick * -30974
+    #     print(self.armR.getSelectedSensorPosition())
+    #     # self.armR.set(ControlMode.Position, targetPositionRotations)
+    #     self.armR.set(leftYStick)
+
+    # def extendLoop(self, pos):
+    #     if pos == 0:  # A
+    #         targetPositionRotations = self.BayPos
+    #     elif pos == 1:  # B
+    #         targetPositionRotations = self.lowPos
+    #     elif pos == 2:  # Y
+    #         targetPositionRotations = self.midPos
+    #     elif pos == 3:  # X
+    #         targetPositionRotations = self.topPos
+    #     self.armR.set(ControlMode.Position, targetPositionRotations)
+    #     print("Encoder " + str(self.armR.getSelectedSensorPosition()))
+    #     print("Target " + str(targetPositionRotations))
+    #     print("Screw Up Amount " + str(abs(targetPositionRotations - self.armR.getSelectedSensorPosition())))
+
+    def stepExtend(self, left, right):
+        if right:
+            self.targetPosition += 1024
+        if left:
+            self.targetPosition -= 1024
+        self.armR.set(ControlMode.Position, self.targetPosition)
+        print("target; " + str(self.targetPosition))
+        print("position; " + str(self.armR.getSelectedSensorPosition()))
+
 
 
 class ArmedRotation:

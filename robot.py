@@ -77,7 +77,8 @@ class Robot(wpilib.TimedRobot):
 
     def testPeriodic(self):
         # self.arm_rot.loop(self.controller1.getLeftY())
-        # self.arm_ext.extendLoop(self.controller1.getLeftY())
+        # self.arm_ext.extendLStick(self.controller1.getLeftY())
+        # self.arm_ext.stepExtend(self.controller1.getLeftBumperPressed(), self.controller1.getRightBumperPressed())
 
         if self.controller1.getAButtonPressed():
             self.pos = 0
