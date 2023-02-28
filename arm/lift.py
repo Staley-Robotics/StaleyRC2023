@@ -1,99 +1,66 @@
-from ctre import WPI_TalonFX
-from wpilib import Encoder, XboxController
+from ctre import *
+from tools import *
 
-
-def calc_rotations(ticks: int):
-    return 0
-
-
-class Lift:
-
-    """
-    TODO Figure out encoder
-     get correct vals
-     calcRotations() function
-     find out how to get length from arm
-     implement arm move function
-     """
+class ArmedRotation:
 
     def __init__(self):
-        # variables
-        self.grabbingBay = 0
-        self.topPos = 245
-        self.midPos = 260
-        self.lowPos = 300
-        self.towardBay = -1  # negative or positive one
-        self.towardPlatform = 1  # negative or positive one
-        self.extend = 1
-        self.retract = -1
+        # Variables for use later in code or init; Listed here for easier editing
+        self.BayPos = 0
+        self.lowPos = 1024
+        self.midPos = (13481 - 1024) / 2
+        self.topPos = 13481.0
+        self.kTimeoutMs = 20
+        self.kPIDLoopIdx = 0
+        self.kSlotIdx = 0
+        self.kGains = Gains(0.1, 0.0, 1.0, 0.0, 0, 1.0)
+        self.kSensorPhase = True
+        self.kMotorInvert = False
 
-        self.bayLength = 4
-        self.topLength = 20
-        self.midLength = 16
-        self.lowLength = 10
+        self.armR = WPI_TalonFX(9, 'rio')  # arm rotation motor number 9
+        self.armR.configFactoryDefault()
 
-        self.armR = WPI_TalonFX(14)  # arm rotation motor number
-        self.armL = WPI_TalonFX(13)  # arm extension motor number
-        self.armRE = Encoder(14)
-        self.armRE.reset()
+        # set sensor
+        self.armR.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, self.kPIDLoopIdx,
+                                               self.kTimeoutMs)
+        # correct the motor encoder just in case
+        self.armR.setSensorPhase(self.kSensorPhase)
+        self.armR.setInverted(self.kMotorInvert)
 
-    def test(self):
-        self.armR.set(XboxController.getLeftY)
-        self.armRE.get()
-        print(self.armRE.get())
+        # set peak and nominal outputs
+        self.armR.configNominalOutputForward(0, self.kTimeoutMs)
+        self.armR.configNominalOutputReverse(0, self.kTimeoutMs)
+        self.armR.configPeakOutputForward(1, self.kTimeoutMs)
+        self.armR.configPeakOutputReverse(-1, self.kTimeoutMs)
 
-    def moveTo(self, pos):
-        rotation = calc_rotations(
-            self.armRE.tickNum)  # this line to be implemented when I figure out how to get ticks from the
-        # encoder
-        length = self.armL.length()  # this line to be implemented when I figure out how to get length from the arm
-        if pos == "grabZone":
-            if rotation > self.grabbingBay:  # the 0 value will change to reflect the smallest/lowest position
-                self.armR.set(
-                    self.towardBay)  # For these set() calls, I'm assuming that I'm viewing the robot from the port side
-                # and CCW is negative
-            else:
-                self.armR.set(0)
-            if length > self.bayLength:
-                self.armL.set(self.retract)
-            else:
-                self.armL.set(0)
-        elif pos == "topZone":
-            if rotation > self.topPos:  # the 245 value will change to reflect the top position
-                self.armR.set(self.towardBay)
-            elif rotation < self.topPos:  # the 245 value will change to reflect the top position
-                self.armR.set(self.towardPlatform)
-            else:
-                self.armR.set(0)
-            if length > self.topLength:
-                self.armL.set(self.retract)
-            elif length < self.topLength:
-                self.armL.set(self.extend)
-            else:
-                self.armL.set(0)
-        elif pos == "midZone":
-            if rotation > self.midPos:  # the 260 value will change to reflect the middle position
-                self.armR.set(self.towardBay)
-            elif rotation < self.midPos:  # the 260 value will change to reflect the middle position
-                self.armR.set(self.towardPlatform)
-            else:
-                self.armR.set(0)
-            if length > self.midLength:
-                self.armL.set(self.retract)
-            elif length < self.midLength:
-                self.armL.set(self.extend)
-            else:
-                self.armL.set(0)
-        elif pos == "lowZone":
-            if rotation > self.lowPos:  # the 300 value will change to reflect the hybrid position
-                self.armR.set(self.towardBay)
-            elif rotation < self.lowPos:  # the 300 value will change to reflect the hybrid position
-                self.armR.set(self.towardPlatform)
-            else:
-                self.armR.set(0)
-            if length > self.lowLength:
-                self.armL.set(self.retract)
-            elif length < self.lowLength:
-                self.armL.set(self.extend)
-            else:
-                self.armL.set(0)
+        # allowed closed loop error, it will be neutral within this range
+        self.armR.configAllowableClosedloopError(0, self.kPIDLoopIdx, self.kTimeoutMs)
+
+        # setting the PID settings
+        self.armR.config_kF(self.kPIDLoopIdx, self.kGains.kF, self.kTimeoutMs)
+        self.armR.config_kP(self.kPIDLoopIdx, self.kGains.kP, self.kTimeoutMs)
+        self.armR.config_kI(self.kPIDLoopIdx, self.kGains.kI, self.kTimeoutMs)
+        self.armR.config_kD(self.kPIDLoopIdx, self.kGains.kD, self.kTimeoutMs)
+
+        # Set the quadrature(relative) sensor to match absolutes
+        self.armR.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
+
+    # def loop(self, leftYStick):
+    #     # 10 Rotations * 4096 u/rev in either direction
+    #     targetPositionRotations = leftYStick * 4096 * 10
+    #     self.armR.set(ControlMode.Position, targetPositionRotations)
+    #     print(self.armR.getSelectedSensorPosition())
+
+    def loop(self, pos):
+        if pos == 0:  # A
+            targetPositionRotations = self.BayPos
+        elif pos == 1:  # B
+            targetPositionRotations = self.lowPos
+        elif pos == 2:  # Y
+            targetPositionRotations = self.midPos
+        elif pos == 3:  # X
+            targetPositionRotations = self.topPos
+
+        self.armR.set(ControlMode.Position, targetPositionRotations)
+        print("Encoder " + str(self.armR.getSelectedSensorPosition()))
+        print("Target " + str(targetPositionRotations))
+        print("Screw Up Amount " + str(abs(targetPositionRotations - self.armR.getSelectedSensorPosition())))
