@@ -20,6 +20,8 @@ class Gains:
 
 class Swerve(Chassis):
 
+    speed: float
+    rotation: float
     throttle_pinions: MotorControllerGroup
     rotation_pinions: Tuple[WPI_TalonFX, WPI_TalonFX, WPI_TalonFX, WPI_TalonFX]
 
@@ -30,11 +32,13 @@ class Swerve(Chassis):
     kSensorPhase = True
     kMotorInvert = False
 
-    def __init__(self, inherited_state: NetworkTableInstance):
-        super().__init__(inherited_state)
+    def __init__(self, inherited_state: NetworkTableInstance, controller: XboxController):
+        super().__init__(inherited_state, controller)
 
         # TODO: Test swerve configuration
         self.config = self.state.getTable("swerve")
+        self.speed = 0.0
+        self.rotation = 0.0
 
         self.throttle_pinions = MotorControllerGroup(
             WPI_TalonFX(self.config.getNumber("modules/throttle/0", 1), "rio"),
@@ -67,9 +71,10 @@ class Swerve(Chassis):
             pinion.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
 
     def drive(self):
-        speed = self.in_LY.get() * self.throttle_multiplier
-        rotation = ((-math.atan2(self.in_RX.get(), self.in_RY.get())+(math.pi/4)) / math.pi) * self.talon_fx_revolution_steps
-        self.throttle_pinions.set(speed)
+        self.speed = self.controller.getLeftY() * self.throttle_multiplier
+        if abs(self.controller.getRightX()) > 0.2 or abs(self.controller.getRightY()) > 0.2:
+            self.rotation = (-math.atan2(self.controller.getRightX(), self.controller.getRightY()) / math.pi) * self.talon_fx_revolution_steps
+            self.rotation *= self.rotation_multiplier
+        self.throttle_pinions.set(self.speed)
         for pinion in self.rotation_pinions:
-            # TODO: Test influence of ControlMode.Position on motors
-            pinion.set(ControlMode.Position, rotation)
+            pinion.set(ControlMode.Position, self.rotation)

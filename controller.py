@@ -8,14 +8,10 @@ class Controller(XboxController):
     def __init__(self, port: int, inherited_state: NetworkTableInstance):
         super().__init__(port)
         self.state = inherited_state
-        controller = self.state.getTable("controller")
-        self.LX = controller.getFloatTopic("LX").publish()
-        self.LY = controller.getFloatTopic("LY").publish()
-        self.RX = controller.getFloatTopic("RX").publish()
-        self.RY = controller.getFloatTopic("RY").publish()
+        self.controller = self.state.getTable("controller")
 
     def update(self):
-        self.LX.set(self.getLeftX())
-        self.LY.set(self.getLeftY())
-        self.RX.set(self.getRightX())
-        self.RY.set(self.getRightY())
+        self.controller.set("LX", self.getLeftX())
+        self.controller.set("LY", self.getLeftY())
+        self.controller.set("RX", self.getRightX())
+        self.controller.set("RY", self.getRightY())

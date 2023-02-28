@@ -2,7 +2,6 @@ from wpilib.shuffleboard import Shuffleboard
 from wpilib import *
 from ntcore import *
 
-from controller import Controller
 from drivetrain.chassis import Chassis
 from drivetrain.swerve import Swerve
 from drivetrain.tank import Tank
@@ -14,7 +13,7 @@ class Robot(TimedRobot):
     # TODO: Merge and incorporate other classes
     time: Timer
     state: NetworkTableInstance
-    controller: Controller
+    pilot: XboxController
     drivetrain: Chassis
     limelight: Limelight
 
@@ -24,17 +23,15 @@ class Robot(TimedRobot):
     def robotInit(self) -> None:
         self.time = Timer()
         self.state = NetworkTableInstance.getDefault()
-        self.controller = Controller(0, self.state)
-        self.drivetrain = Swerve(self.state)
+        self.pilot = XboxController(0)
+        self.drivetrain = Swerve(self.state, self.pilot)
         self.limelight = Limelight(self.state)
 
     def teleopInit(self) -> None:
         self.time.start()
 
     def teleopPeriodic(self) -> None:
-        self.controller.update()
         self.drivetrain.drive()
-        print(self.limelight.val("tx"))
 
     def teleopExit(self) -> None:
         self.time.stop()

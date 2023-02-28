@@ -10,8 +10,8 @@ class Tank(Chassis):
     leftModule: MotorControllerGroup
     rightModule: MotorControllerGroup
 
-    def __init__(self, inherited_state: NetworkTableInstance):
-        super().__init__(inherited_state)
+    def __init__(self, inherited_state: NetworkTableInstance, controller: XboxController):
+        super().__init__(inherited_state, controller)
 
         self.config = self.state.getTable("tank")
 
@@ -21,7 +21,7 @@ class Tank(Chassis):
                                                 WPI_TalonFX(self.config.getNumber("modules/right/1", 4), "rio"))
 
     def drive(self):
-        speed = self.in_LY.get() * self.throttle_multiplier
-        rotation = self.in_LX.get() * self.rotation_multiplier
+        speed = self.controller.getLeftY() * self.throttle_multiplier
+        rotation = self.controller.getLeftX() * self.rotation_multiplier
         self.leftModule.set(rotation - speed)
         self.rightModule.set(rotation + speed)
