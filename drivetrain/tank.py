@@ -2,7 +2,7 @@ from wpilib import *
 from ctre import *
 from ntcore import *
 
-from drivetrain.drivetrain import Drivetrain
+from chassis.drivetrain import Drivetrain
 
 
 class Tank(Drivetrain):

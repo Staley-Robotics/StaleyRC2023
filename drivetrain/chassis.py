@@ -1,7 +1,7 @@
 from ntcore import *
 
 
-class Drivetrain:
+class Chassis:
 
     state: NetworkTableInstance
 
