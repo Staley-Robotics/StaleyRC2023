@@ -1,4 +1,3 @@
-from wpilib.shuffleboard import Shuffleboard
 from wpilib import *
 from ntcore import *
 
@@ -16,9 +15,6 @@ class Robot(TimedRobot):
     pilot: XboxController
     drivetrain: Chassis
     limelight: Limelight
-
-    def _simulationPeriodic(self) -> None:
-        Shuffleboard.update()
 
     def robotInit(self) -> None:
         self.time = Timer()
