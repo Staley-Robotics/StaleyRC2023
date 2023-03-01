@@ -9,6 +9,7 @@ class Chassis:
 
     throttle_multiplier: float
     rotation_multiplier: float
+    direction_multiplier: float
 
     # TODO: Add useful constants
     talon_srx_revolution_steps: int = 4096
@@ -21,6 +22,7 @@ class Chassis:
 
         self.throttle_multiplier = self.config.getNumber("control/throttle", 1.0)
         self.rotation_multiplier = self.config.getNumber("control/rotation", 1.0)
+        self.direction_multiplier = self.config.getNumber("control/direction", 0.5)
 
     def drive(self):
         print("No logic connected to drivetrain")

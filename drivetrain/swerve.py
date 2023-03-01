@@ -1,6 +1,7 @@
 import math
 from typing import Tuple
 
+import wpilib
 from wpilib import *
 from ctre import *
 from ntcore import *
@@ -21,8 +22,8 @@ class Gains:
 class Swerve(Chassis):
 
     speed: float
-    turn: float
     rotation: float
+    direction: float
     throttle_left_pinions: MotorControllerGroup
     throttle_right_pinions: MotorControllerGroup
     rotation_pinions: Tuple[WPI_TalonFX, WPI_TalonFX, WPI_TalonFX, WPI_TalonFX]
@@ -40,8 +41,8 @@ class Swerve(Chassis):
         # TODO: Test swerve configuration
         self.config = self.state.getTable("swerve")
         self.speed = 0.0
-        self.turn = 0.0
         self.rotation = 0.0
+        self.direction = 0.0
 
         self.throttle_left_pinions = MotorControllerGroup(
             WPI_TalonFX(self.config.getNumber("modules/throttle/0", 1), "canivore1"),
@@ -77,14 +78,12 @@ class Swerve(Chassis):
 
     def drive(self):
         self.speed = self.controller.getLeftY() * self.throttle_multiplier
-        self.turn = self.controller.getLeftX()
+        self.rotation = self.controller.getLeftX() * self.rotation_multiplier
         if pow(self.controller.getRightX(), 2) + pow(self.controller.getRightY(), 2) > 0.04:
-            self.rotation = (-math.atan2(self.controller.getRightX(), self.controller.getRightY()) / math.pi)
-        self.throttle_left_pinions.set(self.turn - self.speed)
-        self.throttle_right_pinions.set(self.turn + self.speed)
+            self.direction = (-math.atan2(self.controller.getRightX(), self.controller.getRightY()) / math.pi)
+        self.throttle_left_pinions.set(self.rotation - self.speed)
+        self.throttle_right_pinions.set(self.rotation + self.speed)
 
         for pinion in self.rotation_pinions:
             sensor = (pinion.getSelectedSensorPosition() / self.talon_fx_revolution_steps) % 1
-            print(sensor, end=" ")
-            pinion.set((self.rotation - sensor) / 10)
-        print(self.rotation)
+            pinion.set((abs(self.direction) - abs(sensor)) * self.direction_multiplier)

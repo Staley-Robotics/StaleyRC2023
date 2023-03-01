@@ -46,5 +46,13 @@
     "properties": {
       "persistent": true
     }
+  },
+  {
+    "name": "drivetrain/control/direction",
+    "type": "double",
+    "value": 0.5,
+    "properties": {
+      "persistent": true
+    }
   }
 ]
