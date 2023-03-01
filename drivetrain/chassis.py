@@ -12,7 +12,7 @@ class Chassis:
 
     # TODO: Add useful constants
     talon_srx_revolution_steps: int = 4096
-    talon_fx_revolution_steps: int = 2048
+    talon_fx_revolution_steps: int = 4096
 
     def __init__(self, inherited_state: NetworkTableInstance, controller: XboxController):
         self.state = inherited_state

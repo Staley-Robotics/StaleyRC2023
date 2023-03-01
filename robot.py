@@ -28,6 +28,7 @@ class Robot(TimedRobot):
 
     def teleopPeriodic(self) -> None:
         self.drivetrain.drive()
+        self.limelight.val("tx")
 
     def teleopExit(self) -> None:
         self.time.stop()
