@@ -35,7 +35,7 @@ class SwerveModule:
     m_drivePIDController = PIDController(1, 0, 0)
 
     # Gains are for example purposes only - must be determined for your own robot!
-    m_turningPIDController = ProfiledPIDController(1, 0, 0, TrapezoidProfile.Constraints(
+    m_turningPIDController = ProfiledPIDController(0.1, 0, 0, TrapezoidProfile.Constraints(
         kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration))
 
     # Gains are for example purposes only - must be determined for your own robot!
@@ -94,7 +94,7 @@ class SwerveModule:
             pass
         # Limit the PID Controller's input range between -pi and pi and set the input
         # to be continuous.
-        self.m_turningPIDController.setTolerance(250)
+        self.m_turningPIDController.setTolerance(500)
         self.m_turningPIDController.enableContinuousInput(-math.pi, math.pi)
 
     """
@@ -125,7 +125,6 @@ class SwerveModule:
     def setDesiredState(self, desiredState):
         # Optimize the reference state to avoid spinning further than 90 degrees
         state = SwerveModuleState.optimize(desiredState, Rotation2d(self.m_turningMotor.getSelectedSensorPosition() * 2 * math.pi / 2048))
-
         # Calculate the drive output from the drive PID controller.
         driveOutput = self.m_drivePIDController.calculate(self.m_driveMotor.getSelectedSensorVelocity() * 0.05 * 2 * math.pi / 2048, state.speed)
 
@@ -135,5 +134,5 @@ class SwerveModule:
         turnOutput = self.m_turningPIDController.calculate(self.m_turningMotor.getSelectedSensorPosition() * 2 * math.pi / 2048, state.angle.radians())
         turnFeedforward = self.m_turnFeedforward.calculate(self.m_turningPIDController.getSetpoint().velocity)
 
-        self.m_driveMotor.setVoltage(driveOutput + driveFeedforward)
+        # self.m_driveMotor.setVoltage(driveOutput + driveFeedforward)
         self.m_turningMotor.setVoltage(turnOutput + turnFeedforward)
