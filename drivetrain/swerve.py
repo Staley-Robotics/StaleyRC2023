@@ -24,8 +24,8 @@ class Swerve(Chassis):
     speed: float
     rotation: float
     direction: float
-    throttle_left_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
-    throttle_right_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
+    throttle_left_pinions: MotorControllerGroup[WPI_TalonFX]
+    throttle_right_pinions: MotorControllerGroup
     rotation_pinions: Tuple[WPI_TalonFX, WPI_TalonFX, WPI_TalonFX, WPI_TalonFX]
 
     kTimeoutMs = 20
@@ -44,11 +44,11 @@ class Swerve(Chassis):
         self.rotation = 0.0
         self.direction = 0.0
 
-        self.throttle_left_pinions = (
+        self.throttle_left_pinions = MotorControllerGroup(
             WPI_TalonFX(self.config.getNumber("modules/throttle/0", 1), "canivore1"),
             WPI_TalonFX(self.config.getNumber("modules/throttle/1", 3), "canivore1")
         )
-        self.throttle_right_pinions = (
+        self.throttle_right_pinions = MotorControllerGroup(
             WPI_TalonFX(self.config.getNumber("modules/throttle/2", 5), "canivore1"),
             WPI_TalonFX(self.config.getNumber("modules/throttle/3", 7), "canivore1")
         )
@@ -58,9 +58,6 @@ class Swerve(Chassis):
             WPI_TalonFX(self.config.getNumber("modules/rotation/2", 6), "canivore1"),
             WPI_TalonFX(self.config.getNumber("modules/rotation/3", 8), "canivore1")
         )
-
-        self.throttle_right_pinions[0].setInverted(True)
-        self.throttle_left_pinions[1].setInverted(True)
 
         for pinion in self.rotation_pinions:
             pinion.configFactoryDefault()
@@ -84,13 +81,9 @@ class Swerve(Chassis):
         self.rotation = self.controller.getLeftX() * self.rotation_multiplier
         if pow(self.controller.getRightX(), 2) + pow(self.controller.getRightY(), 2) > 0.04:
             self.direction = (-math.atan2(self.controller.getRightX(), self.controller.getRightY()) / math.pi)
-
-        for pinion in self.throttle_left_pinions:
-            pinion.set(self.speed)
-
-        for pinion in self.throttle_right_pinions:
-            pinion.set(self.speed)
+        self.throttle_left_pinions.set(self.rotation - self.speed)
+        self.throttle_right_pinions.set(self.rotation + self.speed)
 
         for pinion in self.rotation_pinions:
-            sensor = (pinion.getSelectedSensorPosition() / (self.talon_fx_revolution_steps * 10)) % 1
+            sensor = (pinion.getSelectedSensorPosition() / self.talon_fx_revolution_steps) % 1
             pinion.set((abs(self.direction) - abs(sensor)) * self.direction_multiplier)
