@@ -69,6 +69,10 @@ class SwerveModule:
         self.m_driveMotor.configFactoryDefault()
         self.m_turningMotor.configFactoryDefault()
 
+        self.m_turningMotor.setSensorPhase(False)
+
+        self.m_turningMotor.setInverted(True)
+
         self.m_driveMotor.setSelectedSensorPosition(0)
         self.m_turningMotor.setSelectedSensorPosition(0)
 
@@ -90,6 +94,7 @@ class SwerveModule:
             pass
         # Limit the PID Controller's input range between -pi and pi and set the input
         # to be continuous.
+        self.m_turningPIDController.setTolerance(250)
         self.m_turningPIDController.enableContinuousInput(-math.pi, math.pi)
 
     """
