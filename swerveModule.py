@@ -63,8 +63,14 @@ class SwerveModule:
         self.m_turningEncoder = Encoder(turningEncoderChannelA, turningEncoderChannelB)
         self.m_driveEncoder = Encoder(driveEncoderChannelA, driveEncoderChannelB)
 
-        self.m_driveMotor = ctre.WPI_TalonFX(driveMotorChannel)
-        self.m_turningMotor = ctre.WPI_TalonFX(turningMotorChannel)
+        self.m_driveMotor = ctre.WPI_TalonFX(driveMotorChannel, "canivore1")
+        self.m_turningMotor = ctre.WPI_TalonFX(turningMotorChannel, "canivore1")
+
+        self.m_driveMotor.configFactoryDefault()
+        self.m_turningMotor.configFactoryDefault()
+
+        self.m_driveMotor.setSelectedSensorPosition(0)
+        self.m_turningMotor.setSelectedSensorPosition(0)
 
         self.m_driveMotor.configSelectedFeedbackSensor(ctre.FeedbackDevice.IntegratedSensor)
         self.m_turningMotor.configSelectedFeedbackSensor(ctre.FeedbackDevice.IntegratedSensor)
