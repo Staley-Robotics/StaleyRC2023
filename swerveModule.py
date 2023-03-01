@@ -35,7 +35,7 @@ class SwerveModule:
     m_drivePIDController = PIDController(1, 0, 0)
 
     # Gains are for example purposes only - must be determined for your own robot!
-    m_turningPIDController = ProfiledPIDController(0.1, 0, 0, TrapezoidProfile.Constraints(
+    m_turningPIDController = ProfiledPIDController(0.06, 0, 0, TrapezoidProfile.Constraints(
         kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration))
 
     # Gains are for example purposes only - must be determined for your own robot!
@@ -134,5 +134,5 @@ class SwerveModule:
         turnOutput = self.m_turningPIDController.calculate(self.m_turningMotor.getSelectedSensorPosition() * 2 * math.pi / 2048, state.angle.radians())
         turnFeedforward = self.m_turnFeedforward.calculate(self.m_turningPIDController.getSetpoint().velocity)
 
-        # self.m_driveMotor.setVoltage(driveOutput + driveFeedforward)
-        self.m_turningMotor.setVoltage(turnOutput + turnFeedforward)
+        self.m_driveMotor.setVoltage(driveOutput) #+ driveFeedforward)
+        self.m_turningMotor.setVoltage(turnOutput) #+ turnFeedforward)
