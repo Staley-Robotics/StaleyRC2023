@@ -20,9 +20,9 @@ class Chassis:
         self.config = self.state.getTable("drivetrain")
         self.controller = controller
 
-        self.throttle_multiplier = self.config.getNumber("control/throttle", 1.0)
-        self.rotation_multiplier = self.config.getNumber("control/rotation", 1.0)
-        self.direction_multiplier = self.config.getNumber("control/direction", 0.5)
+        self.throttle_multiplier = self.config.getNumber("control/throttle", 0.7)
+        self.rotation_multiplier = self.config.getNumber("control/rotation", 0.4)
+        self.direction_multiplier = self.config.getNumber("control/direction", 0.3)
 
     def drive(self):
         print("No logic connected to drivetrain")
