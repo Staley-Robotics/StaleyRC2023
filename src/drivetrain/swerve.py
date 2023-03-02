@@ -6,6 +6,12 @@ from chassis import Chassis
 from src.tools import *
 
 
+# fr: 6
+# bl: 2
+# br: 4
+# fl: 8
+
+
 class Swerve(Chassis):
 
     speed: float
@@ -14,6 +20,8 @@ class Swerve(Chassis):
     throttle_left_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
     throttle_right_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
     rotation_pinions: Tuple[WPI_TalonFX, WPI_TalonFX, WPI_TalonFX, WPI_TalonFX]
+    rotation_pinion_offsets: Tuple[int, int, int, int] = (1374, 1690, 222, 78)
+    full_rotation: Tuple[int, int, int, int] = (-0.75, -0.25, 0.25, 0.75)
 
     def __init__(self, pipeline: PipelineManager):
         super().__init__(pipeline)
@@ -21,6 +29,8 @@ class Swerve(Chassis):
         self.speed = 0.0
         self.rotation = 0.0
         self.direction = 0.0
+
+        self.talon_fx_resolution *= 10
 
         self.throttle_left_pinions = (WPI_TalonFX(1, "canivore1"), WPI_TalonFX(3, "canivore1"))
         self.throttle_right_pinions = (WPI_TalonFX(5, "canivore1"), WPI_TalonFX(7, "canivore1"))
@@ -49,19 +59,15 @@ class Swerve(Chassis):
 
     def drive(self):
         self.speed = self.pipeline.throttle() * self.throttle_multiplier
-        self.rotation = self.pipeline.rotation() * self.rotation_multiplier
-        if pow(self.pipeline.direction_x(), 2) + pow(self.pipeline.direction_y(), 2) > 0.04:
-            self.direction = math.atan2(self.pipeline.direction_x(), -self.pipeline.direction_y()) / math.pi
-
+        self.rotation = self.pipeline.rotation()
         for pinion in self.throttle_left_pinions:
             pinion.set(self.speed)
-
         for pinion in self.throttle_right_pinions:
             pinion.set(self.speed)
 
-        for pinion in self.rotation_pinions:
-            sensor = (pinion.getSelectedSensorPosition() / self.talon_fx_resolution)
-            if self.direction - sensor <= 1:
-                pinion.set((self.direction - sensor) * self.direction_multiplier)
-            else:
-                pinion.set(((1 + self.direction) + (1 - sensor)) * self.direction_multiplier)
+        if pow(self.pipeline.direction_x(), 2) + pow(self.pipeline.direction_y(), 2) > 0.04:
+            self.direction = math.atan2(self.pipeline.direction_x(), -self.pipeline.direction_y()) / math.pi
+        for p in range(len(self.rotation_pinions)):
+            pinion_direction = self.full_rotation[p] * self.rotation + self.direction * (1 - abs(self.rotation))
+            sensor = (self.rotation_pinions[p].getSelectedSensorPosition()) / self.talon_fx_resolution
+            self.rotation_pinions[p].set((pinion_direction - sensor) * self.direction_multiplier)

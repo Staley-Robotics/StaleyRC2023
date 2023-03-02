@@ -1,7 +1,8 @@
-from builtins import function
+
 from enum import Enum
 from typing import Tuple
 
+import function
 from wpilib import *
 
 
