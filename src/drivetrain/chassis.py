@@ -9,7 +9,7 @@ class Chassis:
     rotation_multiplier: float = 0.4
     direction_multiplier: float = 0.3
     talon_srx_resolution: int = 4096
-    talon_fx_resolution: int = 4096
+    talon_fx_resolution: int = 2048
 
     def __init__(self, pipeline: PipelineManager):
         self.pipeline = pipeline
