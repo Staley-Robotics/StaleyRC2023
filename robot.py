@@ -6,7 +6,7 @@ from drivetrain.chassis import Chassis
 from drivetrain.swerve import Swerve
 from drivetrain.tank import Tank
 from optics.limelight import Limelight
-from tools import PipelineManager
+from tools import PipelineManager, Mode
 
 
 class Robot(TimedRobot):
@@ -31,10 +31,11 @@ class Robot(TimedRobot):
 
     def teleopInit(self) -> None:
         self.time.start()
+        self.pipeline.set_mode(Mode.TELEOP)
 
     def teleopPeriodic(self) -> None:
-        self.drivetrain.drive()
-        self.arm.run_checks()
+        # self.drivetrain.drive()
+        # self.arm.run_checks()
         self.claw.run_checks()
 
     def teleopExit(self) -> None:

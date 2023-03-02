@@ -18,4 +18,9 @@ class Claw:
         self.compressor.disable()
 
     def run_checks(self):
+        if self.compressor.getPressureSwitchValue():
+            if not self.compressor.isEnabled():
+                self.compressor.enableDigital()
+        elif self.compressor.isEnabled():
+            self.compressor.disable()
         self.solenoid.set(self.pipeline.grip())

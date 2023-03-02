@@ -1,6 +1,6 @@
 from ctre import *
 
-from src.tools import *
+from tools import *
 from math import pi
 
 
@@ -77,7 +77,7 @@ class Arm:
 
     def run_checks(self):
         self.pivot()
-        self.extend()
+        # self.extend()
 
     def pivot(self):
         target = 0.0

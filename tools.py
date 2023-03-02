@@ -1,8 +1,6 @@
-
 from enum import Enum
 from typing import Tuple
 
-import function
 from wpilib import *
 
 
@@ -15,34 +13,34 @@ class Mode(Enum):
 
 class PipelineManager:
     controllers: Tuple[XboxController, ...]
-    throttle: function
-    rotation: function
-    direction_x: function
-    direction_y: function
-    point_1: function
-    point_2: function
-    point_3: function
-    point_4: function
-    shaft_axis: function
-    stepper_up: function
-    stepper_down: function
-    grip: function
+    throttle: any
+    rotation: any
+    direction_x: any
+    direction_y: any
+    point_1: any
+    point_2: any
+    point_3: any
+    point_4: any
+    shaft_axis: any
+    stepper_up: any
+    stepper_down: any
+    grip: any
 
     def __init__(self, *controller: XboxController):
         self.controllers = controller
         self.mode = Mode.DISABLED
 
-    def set_mode(self):
-        self.throttle = None
-        self.rotation = None
-        self.direction_x = None
-        self.direction_y = None
-        self.point_1 = None
-        self.point_2 = None
-        self.point_3 = None
-        self.point_4 = None
-        self.shaft_axis = None
-        self.grip = None
+    def set_mode(self, mode: Mode):
+        # self.throttle = None
+        # self.rotation = None
+        # self.direction_x = None
+        # self.direction_y = None
+        # self.point_1 = None
+        # self.point_2 = None
+        # self.point_3 = None
+        # self.point_4 = None
+        # self.shaft_axis = None
+        # self.grip = None
 
         self.throttle = self.controllers[0].getLeftY
         self.rotation = self.controllers[0].getLeftX
