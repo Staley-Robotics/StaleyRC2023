@@ -2,7 +2,7 @@ import math
 
 from ctre import *
 
-from chassis import Chassis
+from drivetrain.chassis import Chassis
 from tools import *
 
 

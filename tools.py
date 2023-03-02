@@ -22,9 +22,9 @@ class PipelineManager:
     point_3: any
     point_4: any
     shaft_axis: any
-    stepper_up: any
-    stepper_down: any
+    pivot_axis: any
     grip: any
+    release: any
 
     def __init__(self, *controller: XboxController):
         self.controllers = controller
@@ -50,8 +50,10 @@ class PipelineManager:
         self.point_2 = self.controllers[0].getBButtonPressed
         self.point_3 = self.controllers[0].getXButtonPressed
         self.point_4 = self.controllers[0].getYButtonPressed
+        self.pivot_axis = self.controllers[0].getRightTriggerAxis
         self.shaft_axis = self.controllers[0].getLeftTriggerAxis
-        self.grip = lambda: self.controllers[0].getRightTriggerAxis() > 0.7
+        self.grip = self.controllers[0].getRightBumperPressed
+        self.release = self.controllers[0].getRightBumperPressed
 
 
 class Gains:

@@ -12,11 +12,11 @@ class Arm:
     mag_encoder: int = 4096
     circumference: float = pi
     inch_to_ticks: int = circumference * mag_encoder/360 * shaft_ratio
-    shaft_floor: float = 0.0  # resting on floor
+    shaft_floor: float = 4 * inch_to_ticks  # resting on floor
     shaft_bay: float = 0.0  # needs tuning
-    shaft_low: float = -6127.0  # needs tuning
-    shaft_mid: float = -12423.0  # needs tuning
-    shaft_top: float = -30974.0  # needs tuning
+    shaft_low: float = 6 * inch_to_ticks  # needs tuning
+    shaft_mid: float = 24 * inch_to_ticks  # needs tuning
+    shaft_top: float = 46 * inch_to_ticks  # needs tuning
 
     integrated_encoder: int = 2048
     pivot_ratio: int = 200
@@ -79,6 +79,15 @@ class Arm:
         self.pivot()
         # self.extend()
 
+    def rotate_stickler(self):
+        self.arm_r.set(ControlMode.Position, self.pipeline.pivot_axis() * 90 * self.degrees_to_ticks)
+
+    def extend_stickler(self):
+        target = self.pipeline.shaft_axis() * 48 * self.inch_to_ticks
+        if target > 48 * self.inch_to_ticks:
+            target = 48 * self.inch_to_ticks
+        self.arm_e.set(ControlMode.Position, target)
+
     def pivot(self):
         target = 0.0
         if self.pipeline.point_1():
@@ -105,6 +114,8 @@ class Arm:
             target = self.shaft_mid
         elif self.pipeline.point_4():
             target = self.shaft_top
+        if target > 48 * self.inch_to_ticks:
+            target = 48 * self.inch_to_ticks
         self.arm_e.set(ControlMode.Position, target)
         print("Encoder " + str(self.arm_e.getSelectedSensorPosition()))
         print("Target " + str(target))

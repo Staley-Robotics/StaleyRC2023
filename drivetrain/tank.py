@@ -1,7 +1,7 @@
 from wpilib import *
 from ctre import *
 
-from chassis import Chassis
+from drivetrain.chassis import Chassis
 
 
 class Tank(Chassis):

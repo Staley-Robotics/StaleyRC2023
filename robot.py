@@ -32,6 +32,7 @@ class Robot(TimedRobot):
     def teleopInit(self) -> None:
         self.time.start()
         self.pipeline.set_mode(Mode.TELEOP)
+        self.claw.compressor.enableDigital()
 
     def teleopPeriodic(self) -> None:
         # self.drivetrain.drive()
