@@ -1,17 +1,26 @@
 from ctre import *
 
 from src.tools import *
+from math import pi
 
 
 class Arm:
 
     pipeline: PipelineManager
 
+    shaft_ratio: int = 50
+    mag_encoder: int = 4096
+    circumference: float = pi
+    inch_to_ticks: int = circumference * mag_encoder/360 * shaft_ratio
+    shaft_floor: float = 0.0  # resting on floor
     shaft_bay: float = 0.0  # needs tuning
     shaft_low: float = -6127.0  # needs tuning
     shaft_mid: float = -12423.0  # needs tuning
     shaft_top: float = -30974.0  # needs tuning
 
+    integrated_encoder: int = 2048
+    pivot_ratio: int = 200
+    degrees_to_ticks = integrated_encoder/360 * pivot_ratio
     pivot_bay: float = 0.0  # needs tuning
     pivot_low: float = 1024.0  # needs tuning
     pivot_mid: float = 6228.5  # needs tuning
