@@ -2,10 +2,9 @@ from ntcore import *
 
 
 class Limelight:
-    state: NetworkTableInstance
 
-    def __init__(self, inherited_state: NetworkTableInstance):
-        self.state = inherited_state
+    def __init__(self):
+        self.state = NetworkTableInstance.getDefault()
         self.config = self.state.getTable("limelight")
         self.led_state = self.config.getEntry('ledMode')
         self.cam_mode = self.config.getEntry('camMode')
