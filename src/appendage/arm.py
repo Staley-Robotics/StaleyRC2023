@@ -7,15 +7,15 @@ class Arm:
 
     pipeline: PipelineManager
 
-    shaft_bay: float = 0.0
-    shaft_low: float = -6127.0
-    shaft_mid: float = -12423.0
-    shaft_top: float = -30974.0
+    shaft_bay: float = 0.0  # needs tuning
+    shaft_low: float = -6127.0  # needs tuning
+    shaft_mid: float = -12423.0  # needs tuning
+    shaft_top: float = -30974.0  # needs tuning
 
-    pivot_bay: float = 0.0
-    pivot_low: float = 1024.0
-    pivot_mid: float = 6228.5
-    pivot_top: float = 13481.0
+    pivot_bay: float = 0.0  # needs tuning
+    pivot_low: float = 1024.0  # needs tuning
+    pivot_mid: float = 6228.5  # needs tuning
+    pivot_top: float = 13481.0  # needs tuning
 
     arm_r = WPI_TalonFX(9, "rio")
     arm_e = WPI_TalonFX(18, "rio")
@@ -67,9 +67,8 @@ class Arm:
         self.arm_e.selectProfileSlot(0, 0)
 
     def run_checks(self):
-        self.step()
-        self.extend_stick()
         self.pivot()
+        self.extend()
 
     def pivot(self):
         target = 0.0
@@ -87,14 +86,8 @@ class Arm:
         print("Target " + str(target))
         print("Screw Up Amount " + str(abs(target - self.arm_r.getSelectedSensorPosition())))
 
-    def extend_stick(self,):
-        target = self.pipeline.shaft_axis() * -30974
-        print(self.arm_e.getSelectedSensorPosition())
-        # self.armR.set(ControlMode.Position, target)
-        self.arm_e.set(self.pipeline.shaft_axis())
-
     def extend(self):
-        target = 0
+        target = 0.0
         if self.pipeline.point_1():
             target = self.shaft_bay
         elif self.pipeline.point_2():
@@ -107,12 +100,3 @@ class Arm:
         print("Encoder " + str(self.arm_e.getSelectedSensorPosition()))
         print("Target " + str(target))
         print("Screw Up Amount " + str(abs(target - self.arm_e.getSelectedSensorPosition())))
-
-    def step(self):
-        if self.pipeline.stepper_up():
-            self.target_pos += 1024
-        if self.pipeline.stepper_down():
-            self.target_pos -= 1024
-        self.arm_e.set(ControlMode.Position, float(self.target_pos))
-        print("target; " + str(self.target_pos))
-        print("position; " + str(self.arm_e.getSelectedSensorPosition()))

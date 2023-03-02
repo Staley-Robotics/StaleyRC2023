@@ -41,8 +41,6 @@ class PipelineManager:
         self.point_3 = None
         self.point_4 = None
         self.shaft_axis = None
-        self.stepper_up = None
-        self.stepper_down = None
         self.grip = None
 
         self.throttle = self.controllers[0].getLeftY
@@ -54,8 +52,6 @@ class PipelineManager:
         self.point_3 = self.controllers[0].getXButtonPressed
         self.point_4 = self.controllers[0].getYButtonPressed
         self.shaft_axis = self.controllers[0].getLeftTriggerAxis
-        self.stepper_up = self.controllers[0].getRightBumperPressed
-        self.stepper_down = self.controllers[0].getLeftBumperPressed
         self.grip = lambda: self.controllers[0].getRightTriggerAxis() > 0.7
 
 
