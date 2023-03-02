@@ -68,11 +68,6 @@ class Swerve(Chassis):
         if pow(self.pipeline.direction_x(), 2) + pow(self.pipeline.direction_y(), 2) > 0.04:
             self.direction = math.atan2(self.pipeline.direction_x(), -self.pipeline.direction_y()) / math.pi
         for p in range(len(self.rotation_pinions)):
-            print(self.full_rotation[p], "*", self.rotation, "+", self.direction, "*", (1 - abs(self.rotation)))
             pinion_direction = self.full_rotation[p] * self.rotation + self.direction * (1 - abs(self.rotation))
-            sensor = (self.rotation_pinions[p].getSelectedSensorPosition() - self.rotation_pinion_offsets[
-                p]) / self.talon_fx_resolution
-            if pinion_direction - sensor <= 1:
-                self.rotation_pinions[p].set((pinion_direction - sensor) * self.direction_multiplier)
-            else:
-                self.rotation_pinions[p].set(((1 + pinion_direction) + (1 - sensor)) * self.direction_multiplier)
+            sensor = (self.rotation_pinions[p].getSelectedSensorPosition()) / self.talon_fx_resolution
+            self.rotation_pinions[p].set((pinion_direction - sensor) * self.direction_multiplier)
