@@ -1,9 +1,9 @@
-from wpilib import *
+from tools import PipelineManager
 
 
 class Chassis:
 
-    controller: XboxController
+    pipeline: PipelineManager
 
     throttle_multiplier: float = 0.7
     rotation_multiplier: float = 0.4
@@ -11,8 +11,8 @@ class Chassis:
     talon_srx_resolution: int = 4096
     talon_fx_resolution: int = 4096
 
-    def __init__(self, controller: XboxController):
-        self.controller = controller
+    def __init__(self, pipeline: PipelineManager):
+        self.pipeline = pipeline
 
     def drive(self):
         print("No logic connected to drivetrain")

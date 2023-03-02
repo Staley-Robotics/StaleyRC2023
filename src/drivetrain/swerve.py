@@ -1,7 +1,5 @@
 import math
-from typing import Tuple
 
-from wpilib import *
 from ctre import *
 
 from chassis import Chassis
@@ -17,8 +15,8 @@ class Swerve(Chassis):
     throttle_right_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
     rotation_pinions: Tuple[WPI_TalonFX, WPI_TalonFX, WPI_TalonFX, WPI_TalonFX]
 
-    def __init__(self, controller: XboxController):
-        super().__init__(controller)
+    def __init__(self, pipeline: PipelineManager):
+        super().__init__(pipeline)
 
         self.speed = 0.0
         self.rotation = 0.0
@@ -50,10 +48,10 @@ class Swerve(Chassis):
             pinion.setSelectedSensorPosition(0, PID_loop_idx, k_timeout)
 
     def drive(self):
-        self.speed = self.controller.getLeftY() * self.throttle_multiplier
-        self.rotation = self.controller.getLeftX() * self.rotation_multiplier
-        if pow(self.controller.getRightX(), 2) + pow(self.controller.getRightY(), 2) > 0.04:
-            self.direction = math.atan2(self.controller.getRightX(), -self.controller.getRightY()) / math.pi
+        self.speed = self.pipeline.throttle() * self.throttle_multiplier
+        self.rotation = self.pipeline.rotation() * self.rotation_multiplier
+        if pow(self.pipeline.direction_x(), 2) + pow(self.pipeline.direction_y(), 2) > 0.04:
+            self.direction = math.atan2(self.pipeline.direction_x(), -self.pipeline.direction_y()) / math.pi
 
         for pinion in self.throttle_left_pinions:
             pinion.set(self.speed)

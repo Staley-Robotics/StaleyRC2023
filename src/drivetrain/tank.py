@@ -15,7 +15,7 @@ class Tank(Chassis):
         self.rightModule = MotorControllerGroup(WPI_TalonFX(3, "rio"), WPI_TalonFX(4, "rio"))
 
     def drive(self):
-        speed = self.controller.getLeftY() * self.throttle_multiplier
-        rotation = self.controller.getLeftX() * self.rotation_multiplier
+        speed = self.pipeline.throttle() * self.throttle_multiplier
+        rotation = self.pipeline.rotation() * self.rotation_multiplier
         self.leftModule.set(rotation - speed)
         self.rightModule.set(rotation + speed)

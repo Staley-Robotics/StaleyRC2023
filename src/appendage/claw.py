@@ -1,14 +1,16 @@
 from wpilib import *
 
+from tools import PipelineManager
+
 
 class Claw:
-    controller: XboxController
+    pipeline: PipelineManager
     module: PneumaticsControlModule
     compressor: Compressor
     solenoid: Solenoid
 
-    def __init__(self, controller: XboxController):
-        self.controller = controller
+    def __init__(self, pipeline: PipelineManager):
+        self.pipeline = pipeline
         self.module = PneumaticsControlModule(0)
         self.solenoid = self.module.makeSolenoid(1)
 
@@ -16,4 +18,4 @@ class Claw:
         self.compressor.disable()
 
     def run_checks(self):
-        self.solenoid.set(self.controller.getRightTriggerAxis() > 0.7)
+        self.solenoid.set(self.pipeline.grip())

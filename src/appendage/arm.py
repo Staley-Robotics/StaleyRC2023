@@ -1,12 +1,11 @@
 from ctre import *
-from wpilib import XboxController
 
 from src.tools import *
 
 
 class Arm:
 
-    controller: XboxController
+    pipeline: PipelineManager
 
     shaft_bay: float = 0.0
     shaft_low: float = -6127.0
@@ -23,8 +22,8 @@ class Arm:
 
     target_pos: float = 0
 
-    def __init__(self, controller: XboxController):
-        self.controller = controller
+    def __init__(self, pipeline: PipelineManager):
+        self.pipeline = pipeline
         self.arm_r.configFactoryDefault()
 
         self.arm_r.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, PID_loop_idx, k_timeout)
@@ -36,7 +35,7 @@ class Arm:
         self.arm_r.configPeakOutputForward(1, k_timeout)
         self.arm_r.configPeakOutputReverse(-1, k_timeout)
 
-        self.arm_r.configAllowableClosedloopError(0,PID_loop_idx, k_timeout)
+        self.arm_r.configAllowableClosedloopError(0, PID_loop_idx, k_timeout)
 
         self.arm_r.config_kF(PID_loop_idx, k_gains.kF, k_timeout)
         self.arm_r.config_kP(PID_loop_idx, k_gains.kP, k_timeout)
@@ -74,13 +73,13 @@ class Arm:
 
     def pivot(self):
         target = 0.0
-        if self.controller.getAButtonPressed():
+        if self.pipeline.point_1():
             target = self.pivot_bay
-        elif self.controller.getBButtonPressed():
+        elif self.pipeline.point_2():
             target = self.pivot_low
-        elif self.controller.getYButtonPressed():
+        elif self.pipeline.point_3():
             target = self.pivot_mid
-        elif self.controller.getXButtonPressed():
+        elif self.pipeline.point_4():
             target = self.pivot_top
 
         self.arm_r.set(ControlMode.Position, target)
@@ -89,31 +88,30 @@ class Arm:
         print("Screw Up Amount " + str(abs(target - self.arm_r.getSelectedSensorPosition())))
 
     def extend_stick(self,):
-        target = self.controller.getLeftY() * -30974
+        target = self.pipeline.shaft_axis() * -30974
         print(self.arm_e.getSelectedSensorPosition())
         # self.armR.set(ControlMode.Position, target)
-        self.arm_e.set(self.controller.getLeftY())
+        self.arm_e.set(self.pipeline.shaft_axis())
 
-    # FIXME: Inputs interfere with Arm.pivot
-    # def extend(self):
-    #     target = 0
-    #     if self.controller.getAButtonPressed():
-    #         target = self.shaft_bay
-    #     elif self.controller.getBButtonPressed():
-    #         target = self.shaft_low
-    #     elif self.controller.getYButtonPressed():
-    #         target = self.shaft_mid
-    #     elif self.controller.getXButtonPressed():
-    #         target = self.shaft_top
-    #     self.arm_e.set(ControlMode.Position, target)
-    #     print("Encoder " + str(self.arm_e.getSelectedSensorPosition()))
-    #     print("Target " + str(target))
-    #     print("Screw Up Amount " + str(abs(target - self.arm_e.getSelectedSensorPosition())))
+    def extend(self):
+        target = 0
+        if self.pipeline.point_1():
+            target = self.shaft_bay
+        elif self.pipeline.point_2():
+            target = self.shaft_low
+        elif self.pipeline.point_3():
+            target = self.shaft_mid
+        elif self.pipeline.point_4():
+            target = self.shaft_top
+        self.arm_e.set(ControlMode.Position, target)
+        print("Encoder " + str(self.arm_e.getSelectedSensorPosition()))
+        print("Target " + str(target))
+        print("Screw Up Amount " + str(abs(target - self.arm_e.getSelectedSensorPosition())))
 
     def step(self):
-        if self.controller.getRightBumperPressed():
+        if self.pipeline.stepper_up():
             self.target_pos += 1024
-        if self.controller.getLeftBumperPressed():
+        if self.pipeline.stepper_down():
             self.target_pos -= 1024
         self.arm_e.set(ControlMode.Position, float(self.target_pos))
         print("target; " + str(self.target_pos))

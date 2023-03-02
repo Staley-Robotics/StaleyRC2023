@@ -6,6 +6,7 @@ from drivetrain.chassis import Chassis
 from drivetrain.swerve import Swerve
 from drivetrain.tank import Tank
 from optics.limelight import Limelight
+from tools import PipelineManager
 
 
 class Robot(TimedRobot):
@@ -13,6 +14,7 @@ class Robot(TimedRobot):
     # TODO: Merge and incorporate other classes
     time: Timer
     pilot: XboxController
+    pipeline: PipelineManager
     drivetrain: Chassis
     limelight: Limelight
     arm: Arm
@@ -21,10 +23,11 @@ class Robot(TimedRobot):
     def robotInit(self) -> None:
         self.time = Timer()
         self.pilot = XboxController(0)
-        self.drivetrain = Swerve(self.pilot)
+        self.pipeline = PipelineManager(self.pilot)
+        self.drivetrain = Swerve(self.pipeline)
         self.limelight = Limelight()
-        self.arm = Arm(self.pilot)
-        self.claw = Claw(self.pilot)
+        self.arm = Arm(self.pipeline)
+        self.claw = Claw(self.pipeline)
 
     def teleopInit(self) -> None:
         self.time.start()
