@@ -126,7 +126,7 @@ class SwerveModule:
         # Optimize the reference state to avoid spinning further than 90 degrees
         state = SwerveModuleState.optimize(desiredState, Rotation2d(self.m_turningMotor.getSelectedSensorPosition() * 2 * math.pi / 2048))
         # Calculate the drive output from the drive PID controller.
-        driveOutput = self.m_drivePIDController.calculate(self.m_driveMotor.getSelectedSensorVelocity() * 0.05 * 2 * math.pi / 2048, state.speed)
+        driveOutput = self.m_drivePIDController.calculate(self.m_driveMotor.getSelectedSensorVelocity() * 0.1 * 2 * math.pi / 2048, state.speed)
 
         driveFeedforward = self.m_driveFeedforward.calculate(state.speed)
 
@@ -134,5 +134,5 @@ class SwerveModule:
         turnOutput = self.m_turningPIDController.calculate(self.m_turningMotor.getSelectedSensorPosition() * 2 * math.pi / 2048, state.angle.radians())
         turnFeedforward = self.m_turnFeedforward.calculate(self.m_turningPIDController.getSetpoint().velocity)
 
-        self.m_driveMotor.setVoltage(driveOutput) #+ driveFeedforward)
+        self.m_driveMotor.setVoltage(driveOutput + driveFeedforward)
         self.m_turningMotor.setVoltage(turnOutput) #+ turnFeedforward)
