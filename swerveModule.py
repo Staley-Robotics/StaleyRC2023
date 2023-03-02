@@ -134,5 +134,5 @@ class SwerveModule:
         turnOutput = self.m_turningPIDController.calculate(self.m_turningMotor.getSelectedSensorPosition() * 2 * math.pi / 2048, state.angle.radians() * 10)
         turnFeedforward = self.m_turnFeedforward.calculate(self.m_turningPIDController.getSetpoint().velocity)
 
-        self.m_driveMotor.setVoltage(driveOutput + driveFeedforward)
+        #self.m_driveMotor.setVoltage(driveOutput + driveFeedforward)
         self.m_turningMotor.setVoltage(turnOutput + turnFeedforward)

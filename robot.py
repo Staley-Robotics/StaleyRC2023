@@ -36,9 +36,9 @@ class Robot(wpilib.TimedRobot):
                 return 0
             return num
 
-        leftx1 = wpimath.applyDeadband(self.controller1.getLeftX(), 0.5, 1)
-        lefty1 = wpimath.applyDeadband(self.controller1.getLeftY(), 0.5, 1)
-        rightx1 = wpimath.applyDeadband(self.controller1.getRightX(), 0.5, 1)
+        leftx1 = wpimath.applyDeadband(self.controller1.getLeftX(), 0.05, 1)
+        lefty1 = wpimath.applyDeadband(self.controller1.getLeftY(), 0.05, 1)
+        rightx1 = wpimath.applyDeadband(self.controller1.getRightX(), 0.05, 1)
 
         self.swerve.drive(leftx1, lefty1, rightx1, True)
 
