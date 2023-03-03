@@ -1,7 +1,7 @@
 import wpimath
 from wpilib import *
 
-# from drivetrain.swerve_drivetrain import *
+from drivetrain.swerve_drivetrain import *
 from appendage.arm import Arm
 from appendage.claw import Claw
 from drivetrain.chassis import Chassis
@@ -53,20 +53,20 @@ class Robot(TimedRobot):
 
     def autonomousExit(self) -> None: ...
 
-    # def testInit(self) -> None:
-        # self.swerve = Drivetrain()
+    def testInit(self) -> None:
+        self.swerve = Drivetrain()
 
-    # def testPeriodic(self) -> None:
-    #     def clamp(num, min_value):
-    #         if abs(num) < min_value:
-    #             return 0
-    #         return num
-    #
-    #     leftx1 = wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1)
-    #     lefty1 = wpimath.applyDeadband(self.pipeline.throttle(), 0.05, 1)
-    #     rightx1 = wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1)
+    def testPeriodic(self) -> None:
+         def clamp(num, min_value):
+             if abs(num) < min_value:
+                 return 0
+             return num
 
-        # self.swerve.drive(leftx1, lefty1, rightx1, True)
+         leftx1 = wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1)
+         lefty1 = wpimath.applyDeadband(self.pipeline.throttle(), 0.05, 1)
+         rightx1 = wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1)
+
+         self.swerve.drive(leftx1, lefty1, rightx1, True)
 
 
 if __name__ == "__main__":
