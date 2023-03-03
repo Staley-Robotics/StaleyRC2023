@@ -23,6 +23,7 @@ class PipelineManager:
     point_4: any
     shaft_axis: any
     pivot_axis: any
+    pivot_negative_axis: any
     grip: any
     release: any
 
@@ -51,7 +52,8 @@ class PipelineManager:
         self.point_3 = self.controllers[0].getXButtonPressed
         self.point_4 = self.controllers[0].getYButtonPressed
         self.pivot_axis = self.controllers[0].getRightTriggerAxis
-        self.shaft_axis = self.controllers[0].getLeftTriggerAxis
+        self.pivot_negative_axis = self.controllers[0].getLeftTriggerAxis
+        self.shaft_axis = self.controllers[0].getRightY
         self.grip = self.controllers[0].getRightBumperPressed
         self.release = self.controllers[0].getRightBumperPressed
 
@@ -69,6 +71,6 @@ class Gains:
 k_timeout: int = 20
 PID_loop_idx: int = 0
 k_slot_idx: int = 0
-k_gains: Gains = Gains(0.1, 0.0, 1.0, 0.0, 0, 1.0)
+k_gains: Gains = Gains(0.05, 0.0, 1.0, 0.0, 0, 1.0)
 k_sensor_phase = True
 k_motor_invert = False

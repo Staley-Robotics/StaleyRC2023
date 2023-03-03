@@ -27,9 +27,11 @@ class Arm:
     pivot_top: float = 13481.0  # needs tuning
 
     arm_r = WPI_TalonFX(9, "rio")
-    arm_e = WPI_TalonFX(18, "rio")
+    arm_e = WPI_TalonFX(31, "rio")
 
     target_pos: float = 0
+
+    pivot_atm: float = 0
 
     def __init__(self, pipeline: PipelineManager):
         self.pipeline = pipeline
@@ -76,17 +78,22 @@ class Arm:
         self.arm_e.selectProfileSlot(0, 0)
 
     def run_checks(self):
-        self.pivot()
+        self.extend_stickler()
+        self.rotate_stickler()
         # self.extend()
 
     def rotate_stickler(self):
-        self.arm_r.set(ControlMode.Position, self.pipeline.pivot_axis() * 90 * self.degrees_to_ticks)
+        self.pivot_atm += self.pipeline.pivot_axis() * 0.5 * self.degrees_to_ticks
+        self.pivot_atm -= self.pipeline.pivot_negative_axis() * 0.5 * self.degrees_to_ticks
+        # self.pipeline.pivot_axis() * 90 * self.degrees_to_ticks
+        self.arm_r.set(ControlMode.Position, self.pivot_atm)
 
     def extend_stickler(self):
-        target = self.pipeline.shaft_axis() * 48 * self.inch_to_ticks
-        if target > 48 * self.inch_to_ticks:
-            target = 48 * self.inch_to_ticks
+        target = self.pipeline.shaft_axis() * -48 * self.inch_to_ticks
+        if target < -48 * self.inch_to_ticks:
+            target = -48 * self.inch_to_ticks
         self.arm_e.set(ControlMode.Position, target)
+
 
     def pivot(self):
         target = 0.0

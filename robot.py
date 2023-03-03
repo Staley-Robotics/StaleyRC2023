@@ -3,7 +3,7 @@ from wpilib import *
 from appendage.arm import Arm
 from appendage.claw import Claw
 from drivetrain.chassis import Chassis
-from drivetrain.swerve import Swerve
+from drivetrain.swerve_raw import Swerve
 from drivetrain.tank import Tank
 from optics.limelight import Limelight
 from tools import PipelineManager, Mode

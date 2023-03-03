@@ -5,8 +5,8 @@ class Chassis:
 
     pipeline: PipelineManager
 
-    throttle_multiplier: float = 0.7
-    rotation_multiplier: float = 0.4
+    throttle_multiplier: float = 0.3
+    rotation_multiplier: float = 0.2
     direction_multiplier: float = 0.3
     talon_srx_resolution: int = 4096
     talon_fx_resolution: int = 2048
