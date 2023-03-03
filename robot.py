@@ -32,8 +32,8 @@ class Robot(TimedRobot):
         self.time = Timer()
         self.pilot = XboxController(0)
         self.other = XboxController(1)
-        self.pipeline = PipelineManager(self.pilot)
-        self.drivetrain = Swerve(self.pipeline)
+        self.pipeline = PipelineManager(self.pilot, self.other)
+        self.drivetrain = Swerve2(self.pipeline)
         self.limelight = Limelight()
         self.arm = Arm(self.pipeline)
         self.claw = Claw(self.pipeline)
@@ -91,7 +91,7 @@ class Robot(TimedRobot):
 
     def testInit(self) -> None:
         self.pipeline.set_mode(Mode.TELEOP)
-        self.drivetrain = Swerve2(self.pipeline)
+        self.drivetrain = Swerve(self.pipeline)
 
     def testPeriodic(self) -> None:
         self.drivetrain.drive()
