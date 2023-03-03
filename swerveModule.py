@@ -32,8 +32,8 @@ class SwerveModule:
         kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration))
 
     # Gains are for example purposes only - must be determined for your own robot!
-    ####m_driveFeedforward = SimpleMotorFeedforwardMeters(1, 3)
-    ####m_turnFeedforward = SimpleMotorFeedforwardMeters(0.5, 0.5)
+    m_driveFeedforward = SimpleMotorFeedforwardMeters(1, 3)
+    m_turnFeedforward = SimpleMotorFeedforwardMeters(0.5, 0.5)
 
     """
   * Constructs a SwerveModule with a drive motor, turning motor, drive encoder and turning encoder.
@@ -134,17 +134,20 @@ class SwerveModule:
         state = SwerveModuleState.optimize(desiredState, currentRotation)
 
         # Drive Velocity
-        driveVelocityTicksPer100ms = self.m_driveMotor.getSelectedSensorPosition()
+        driveVelocityTicksPer100ms = self.m_driveMotor.getSelectedSensorVelocity()
         driveVelocityRevolutionsPerSec = driveVelocityTicksPer100ms * 10 / driveTicksPerRevolution
         driveVelocityMetersPerSecond = driveVelocityRevolutionsPerSec * wheelMetersPerRevolution
 
         # Calculate the drive output from the drive PID controller.
-        driveOutput = self.m_drivePIDController.calculate(driveVelocityMetersPerSecond, state.speed)
-        driveFeedforward = 0  ####self.m_driveFeedforward.calculate(state.speed)
+        #driveOutput = self.m_drivePIDController.calculate(driveVelocityMetersPerSecond, state.speed)
+        driveOutput = min( state.speed, 1.0 ) * 4
+        driveFeedforward = self.m_driveFeedforward.calculate(state.speed)
 
+        #print( currentRotation.degrees() )
         # Calculate the turning motor output from the turning PID controller.
         turnOutput = self.m_turningPIDController.calculate(currentRotation.radians(), state.angle.radians())
-        turnFeedforward = 0  ####self.m_turnFeedforward.calculate(self.m_turningPIDController.getSetpoint().velocity)
+        turnFeedforward = self.m_turnFeedforward.calculate(self.m_turningPIDController.getSetpoint().velocity)
 
-        self.m_driveMotor.setVoltage(driveOutput + driveFeedforward)
+        self.m_driveMotor.setVoltage(driveOutput ) #+ driveFeedforward)
         self.m_turningMotor.setVoltage(turnOutput + turnFeedforward)
+        #self.m_turningMotor.set( ctre.ControlMode.Position, int( state.angle.degrees() / 360 * kEncoderResolution * 10 ) )

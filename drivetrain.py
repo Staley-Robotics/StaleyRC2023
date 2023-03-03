@@ -15,10 +15,10 @@ kMaxAngularSpeed = math.pi  # 1/2 rotation per second
 
 # Represents a swerve drive style drivetrain.
 class Drivetrain:
-    m_frontLeftLocation = Translation2d(0.381, 0.381)
-    m_frontRightLocation = Translation2d(0.381, -0.381)
-    m_backLeftLocation = Translation2d(-0.381, 0.381)
-    m_backRightLocation = Translation2d(-0.381, -0.381)
+    m_frontLeftLocation = Translation2d(0.254, 0.305)
+    m_frontRightLocation = Translation2d(0.254, -0.305)
+    m_backLeftLocation = Translation2d(-0.254, 0.305)
+    m_backRightLocation = Translation2d(-0.254, -0.305)
 
     m_frontLeft = SwerveModule(7, 8, 0, 1, 2, 3)
     m_frontRight = SwerveModule(5, 6, 4, 5, 6, 7)
@@ -55,9 +55,9 @@ class Drivetrain:
     def drive(self, xSpeed, ySpeed, rot, fieldRelative):
         driveMovement = None
         if fieldRelative:
-            driveMovement = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, self.m_gyro.getRotation2d())
+            driveMovement = ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot*3.14, self.m_gyro.getRotation2d())
         else:
-            driveMovement = ChassisSpeeds(xSpeed, ySpeed, rot)
+            driveMovement = ChassisSpeeds(xSpeed, ySpeed, rot*3.14)
 
         swerveModuleStates = m_kinematics.toSwerveModuleStates(driveMovement, Translation2d(0, 0))
         SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed)
