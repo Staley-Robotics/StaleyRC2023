@@ -1,162 +1,120 @@
-import ctre
-from ctre import *
-import wpilib
-import wpimath.controller
-import math
-
-
 # vehemently vomiting violent vulgarisms
 # placidly placing purple plaques
 # sadistically spacing sanguine serpents
 # tremulously tracking tramping truant tripe
+from ctre import *
+
+from tools import *
+from math import pi
 
 
-class ArmedExtension:
-    def __init__(self):
-        # Variables for use later in code or init; Listed here for easier editing
-        self.BayPos = 0  # tune for extension
-        self.lowPos = -6127  # tune for extension
-        self.topPos = -30974.0  # tune for extension
-        self.midPos = int((self.topPos - self.lowPos) / 2)  # tune for extension
-        self.kTimeoutMs = 20
-        self.kPIDLoopIdx = 0
-        self.kSlotIdx = 0
-        self.kGains = Gains(0.15, 0.0, 0.0, 0.0, 0, 0.25)
-        self.kSensorPhase = False
-        self.kMotorInvert = False
+class Arm:
 
-        self.armR = ctre.WPI_TalonSRX(18)  # arm extension talon srx number 9
-        self.armR.configFactoryDefault()
+    pipeline: PipelineManager
 
-        # set sensor
-        self.armR.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, self.kPIDLoopIdx,
-                                               self.kTimeoutMs)
-        # correct the motor encoder just in case
-        self.armR.setSensorPhase(self.kSensorPhase)
-        self.armR.setInverted(self.kMotorInvert)
+    shaft_ratio: int = 50
+    mag_encoder: int = 4096
+    circumference: float = pi
+    inch_to_ticks: int = circumference * mag_encoder/360 * shaft_ratio
+    shaft_floor: float = 4 * inch_to_ticks  # resting on floor
+    shaft_bay: float = 0.0  # needs tuning
+    shaft_low: float = 6 * inch_to_ticks  # needs tuning
+    shaft_mid: float = 24 * inch_to_ticks  # needs tuning
+    shaft_top: float = 46 * inch_to_ticks  # needs tuning
 
-        # set peak and nominal outputs
-        self.armR.configNominalOutputForward(0, self.kTimeoutMs)
-        self.armR.configNominalOutputReverse(0, self.kTimeoutMs)
-        self.armR.configPeakOutputForward(1, self.kTimeoutMs)
-        self.armR.configPeakOutputReverse(-1, self.kTimeoutMs)
+    integrated_encoder: int = 2048
+    pivot_ratio: int = 200
+    degrees_to_ticks = integrated_encoder/360 * pivot_ratio
+    pivot_bay: float = 0.0  # needs tuning
+    pivot_low: float = 1024.0  # needs tuning
+    pivot_mid: float = 6228.5  # needs tuning
+    pivot_top: float = 13481.0  # needs tuning
 
-        # allowed closed loop error, it will be neutral within this range
-        self.armR.configAllowableClosedloopError(10, self.kPIDLoopIdx, self.kTimeoutMs)
+    arm_r = WPI_TalonFX(9, "rio")
+    arm_e = WPI_TalonFX(18, "rio")
 
-        # setting the PID configs
-        self.armR.config_kF(self.kPIDLoopIdx, self.kGains.kF, self.kTimeoutMs)
-        self.armR.config_kP(self.kPIDLoopIdx, self.kGains.kP, self.kTimeoutMs)
-        self.armR.config_kI(self.kPIDLoopIdx, self.kGains.kI, self.kTimeoutMs)
-        self.armR.config_kD(self.kPIDLoopIdx, self.kGains.kD, self.kTimeoutMs)
+    target_pos: float = 0
 
-        # Set the quadrature(relative) sensor to match absolutes
-        self.armR.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
+    def __init__(self, pipeline: PipelineManager):
+        self.pipeline = pipeline
+        self.arm_r.configFactoryDefault()
 
-        self.armR.selectProfileSlot(0, 0)
-        self.targetPosition = 0
+        self.arm_r.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, PID_loop_idx, k_timeout)
+        self.arm_r.setSensorPhase(k_sensor_phase)
+        self.arm_r.setInverted(k_motor_invert)
 
-    def extendLStick(self, leftYStick):
-        # 10 Rotations * 4096 u/rev in either direction
-        targetPositionRotations = leftYStick * -30974
-        print(self.armR.getSelectedSensorPosition())
-        # self.armR.set(ControlMode.Position, targetPositionRotations)
-        self.armR.set(leftYStick)
+        self.arm_r.configNominalOutputForward(0, k_timeout)
+        self.arm_r.configNominalOutputReverse(0, k_timeout)
+        self.arm_r.configPeakOutputForward(1, k_timeout)
+        self.arm_r.configPeakOutputReverse(-1, k_timeout)
 
-    def extendLoop(self, pos):
-        if pos == 0:  # A
-            targetPositionRotations = self.BayPos
-        elif pos == 1:  # B
-            targetPositionRotations = self.lowPos
-        elif pos == 2:  # Y
-            targetPositionRotations = self.midPos
-        elif pos == 3:  # X
-            targetPositionRotations = self.topPos
-        self.armR.set(ControlMode.Position, targetPositionRotations)
-        print("Encoder " + str(self.armR.getSelectedSensorPosition()))
-        print("Target " + str(targetPositionRotations))
-        print("Screw Up Amount " + str(abs(targetPositionRotations - self.armR.getSelectedSensorPosition())))
+        self.arm_r.configAllowableClosedloopError(0, PID_loop_idx, k_timeout)
 
-    def stepExtend(self, left: bool, right: bool):
-        if right:
-            self.targetPosition += 1024
-        if left:
-            self.targetPosition -= 1024
-        self.armR.set(ControlMode.Position, float(self.targetPosition))
-        print("target; " + str(self.targetPosition))
-        print("position; " + str(self.armR.getSelectedSensorPosition()))
+        self.arm_r.config_kF(PID_loop_idx, k_gains.kF, k_timeout)
+        self.arm_r.config_kP(PID_loop_idx, k_gains.kP, k_timeout)
+        self.arm_r.config_kI(PID_loop_idx, k_gains.kI, k_timeout)
+        self.arm_r.config_kD(PID_loop_idx, k_gains.kD, k_timeout)
 
+        self.arm_e.setSelectedSensorPosition(0, PID_loop_idx, k_timeout)
 
-class ArmedRotation:
+        self.arm_e.configFactoryDefault()
 
-    def __init__(self):
-        # Variables for use later in code or init; Listed here for easier editing
-        self.BayPos = 0
-        self.lowPos = 1024
-        self.midPos = (13481 - 1024) / 2
-        self.topPos = 13481.0
-        self.kTimeoutMs = 20
-        self.kPIDLoopIdx = 0
-        self.kSlotIdx = 0
-        self.kGains = Gains(0.1, 0.0, 1.0, 0.0, 0, 1.0)
-        self.kSensorPhase = True
-        self.kMotorInvert = False
+        self.arm_e.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, PID_loop_idx, k_timeout)
+        self.arm_e.setSensorPhase(k_sensor_phase)
+        self.arm_e.setInverted(k_motor_invert)
 
-        self.armR = ctre.WPI_TalonFX(9, 'rio')  # arm rotation motor number 9
-        self.armR.configFactoryDefault()
+        self.arm_e.configNominalOutputForward(0, k_timeout)
+        self.arm_e.configNominalOutputReverse(0, k_timeout)
+        self.arm_e.configPeakOutputForward(1, k_timeout)
+        self.arm_e.configPeakOutputReverse(-1, k_timeout)
 
-        # set sensor
-        self.armR.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, self.kPIDLoopIdx,
-                                               self.kTimeoutMs)
-        # correct the motor encoder just in case
-        self.armR.setSensorPhase(self.kSensorPhase)
-        self.armR.setInverted(self.kMotorInvert)
+        self.arm_e.configAllowableClosedloopError(0, PID_loop_idx, k_timeout)
 
-        # set peak and nominal outputs 
-        self.armR.configNominalOutputForward(0, self.kTimeoutMs)
-        self.armR.configNominalOutputReverse(0, self.kTimeoutMs)
-        self.armR.configPeakOutputForward(1, self.kTimeoutMs)
-        self.armR.configPeakOutputReverse(-1, self.kTimeoutMs)
+        self.arm_e.config_kF(PID_loop_idx, k_gains.kF, k_timeout)
+        self.arm_e.config_kP(PID_loop_idx, k_gains.kP, k_timeout)
+        self.arm_e.config_kI(PID_loop_idx, k_gains.kI, k_timeout)
+        self.arm_e.config_kD(PID_loop_idx, k_gains.kD, k_timeout)
 
-        # allowed closed loop error, it will be neutral within this range
-        self.armR.configAllowableClosedloopError(0, self.kPIDLoopIdx, self.kTimeoutMs)
+        self.arm_e.setSelectedSensorPosition(0, PID_loop_idx, k_timeout)
 
-        # setting the PID settings
-        self.armR.config_kF(self.kPIDLoopIdx, self.kGains.kF, self.kTimeoutMs)
-        self.armR.config_kP(self.kPIDLoopIdx, self.kGains.kP, self.kTimeoutMs)
-        self.armR.config_kI(self.kPIDLoopIdx, self.kGains.kI, self.kTimeoutMs)
-        self.armR.config_kD(self.kPIDLoopIdx, self.kGains.kD, self.kTimeoutMs)
+        self.arm_e.selectProfileSlot(0, 0)
 
-        # Set the quadrature(relative) sensor to match absolutes
-        self.armR.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
+    def run_checks(self):
+        self.pivot()
+        # self.extend()
 
-    # def loop(self, leftYStick):
-    #     # 10 Rotations * 4096 u/rev in either direction
-    #     targetPositionRotations = leftYStick * 4096 * 10
-    #     self.armR.set(ControlMode.Position, targetPositionRotations)
-    #     print(self.armR.getSelectedSensorPosition())
+    def stickler(self):
+        self.arm_r.set()
 
-    def loop(self, pos):
-        if pos == 0:  # A
-            targetPositionRotations = self.BayPos
-        elif pos == 1:  # B
-            targetPositionRotations = self.lowPos
-        elif pos == 2:  # Y
-            targetPositionRotations = self.midPos
-        elif pos == 3:  # X
-            targetPositionRotations = self.topPos
+    def pivot(self):
+        target = 0.0
+        if self.pipeline.point_1():
+            target = self.pivot_bay
+        elif self.pipeline.point_2():
+            target = self.pivot_low
+        elif self.pipeline.point_3():
+            target = self.pivot_mid
+        elif self.pipeline.point_4():
+            target = self.pivot_top
 
-        self.armR.set(ControlMode.Position, targetPositionRotations)
-        print("Encoder " + str(self.armR.getSelectedSensorPosition()))
-        print("Target " + str(targetPositionRotations))
-        print("Screw Up Amount " + str(abs(targetPositionRotations - self.armR.getSelectedSensorPosition())))
+        self.arm_r.set(ControlMode.Position, target)
+        print("Encoder " + str(self.arm_r.getSelectedSensorPosition()))
+        print("Target " + str(target))
+        print("Screw Up Amount " + str(abs(target - self.arm_r.getSelectedSensorPosition())))
 
-
-class Gains:
-    def __init__(self, _kP, _kI, _kD, _kF, _kIzone, _kPeakOutput):
-        self.kP = _kP
-        self.kI = _kI
-        self.kD = _kD
-        self.kF = _kF
-        self.kIzone = _kIzone
-        self.kPeakOutput = _kPeakOutput
+    def extend(self):
+        target = 0.0
+        if self.pipeline.point_1():
+            target = self.shaft_bay
+        elif self.pipeline.point_2():
+            target = self.shaft_low
+        elif self.pipeline.point_3():
+            target = self.shaft_mid
+        elif self.pipeline.point_4():
+            target = self.shaft_top
+        if target > 48 * self.inch_to_ticks:
+            target = 48 * self.inch_to_ticks
+        self.arm_e.set(ControlMode.Position, target)
+        print("Encoder " + str(self.arm_e.getSelectedSensorPosition()))
+        print("Target " + str(target))
+        print("Screw Up Amount " + str(abs(target - self.arm_e.getSelectedSensorPosition())))
