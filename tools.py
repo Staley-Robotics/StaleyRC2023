@@ -32,31 +32,44 @@ class PipelineManager:
         self.mode = Mode.DISABLED
 
     def set_mode(self, mode: Mode):
-        # self.throttle = None
-        # self.rotation = None
-        # self.direction_x = None
-        # self.direction_y = None
-        # self.point_1 = None
-        # self.point_2 = None
-        # self.point_3 = None
-        # self.point_4 = None
-        # self.shaft_axis = None
-        # self.grip = None
+        self.mode = mode
+        if self.mode == Mode.AUTO:
+            self.throttle = None
+            self.rotation = None
+            self.direction_x = None
+            self.direction_y = None
+            self.point_1 = None
+            self.point_2 = None
+            self.point_3 = None
+            self.point_4 = None
+            self.shaft_axis = None
+            self.grip = None
+        elif self.mode == Mode.TELEOP:
+            self.throttle = self.controllers[0].getLeftY
+            self.rotation = self.controllers[0].getLeftX
+            self.direction_x = self.controllers[0].getRightX
+            self.direction_y = self.controllers[0].getRightY
+            self.point_1 = lambda: 0  # self.controllers[0].getAButtonPressed
+            self.point_2 = lambda: 0  # self.controllers[0].getBButtonPressed
+            self.point_3 = self.controllers[0].getXButtonPressed
+            self.point_4 = self.controllers[0].getYButtonPressed
+            self.pivot_axis = self.controllers[0].getRightTriggerAxis
+            self.pivot_negative_axis = self.controllers[0].getLeftTriggerAxis
+            self.shaft_axis = lambda: 0  # self.controllers[0].getRightY
+            self.grip = self.controllers[0].getAButtonPressed
+            self.release = self.controllers[0].getBButtonPressed
 
-        self.throttle = self.controllers[0].getLeftY
-        self.rotation = self.controllers[0].getLeftX
-        self.direction_x = self.controllers[0].getRightX
-        self.direction_y = self.controllers[0].getRightY
-        self.point_1 = lambda: 0  # self.controllers[0].getAButtonPressed
-        self.point_2 = lambda: 0  # self.controllers[0].getBButtonPressed
-        self.point_3 = self.controllers[0].getXButtonPressed
-        self.point_4 = self.controllers[0].getYButtonPressed
-        self.pivot_axis = self.controllers[0].getRightTriggerAxis
-        self.pivot_negative_axis = self.controllers[0].getLeftTriggerAxis
-        self.shaft_axis = lambda: 0  # self.controllers[0].getRightY
-        self.grip = self.controllers[0].getAButtonPressed
-        self.release = self.controllers[0].getBButtonPressed
+    def throttle_constant(self, val):
+        self.throttle = val
 
+    def rotation_constant(self, val):
+        self.rotation = val
+
+    def direction_x_constant(self, val):
+        self.direction_x = val
+
+    def direction_y_constant(self, val):
+        self.direction_y = val
 
 class Gains:
     def __init__(self, _kP, _kI, _kD, _kF, _kIzone, _kPeakOutput):

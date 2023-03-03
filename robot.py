@@ -1,10 +1,14 @@
+from typing import List
+
 import wpimath
 from wpilib import *
 
 # from drivetrain.swerve_drivetrain import *
 from appendage.arm import Arm
 from appendage.claw import Claw
+from autonomous.step import Step
 from drivetrain.chassis import Chassis
+from drivetrain.swerve_drivetrain import Swerve2
 from drivetrain.swerve_raw import Swerve
 from drivetrain.tank import Tank
 from optics.limelight import Limelight
@@ -21,7 +25,8 @@ class Robot(TimedRobot):
     limelight: Limelight
     arm: Arm
     claw: Claw
-    # swerve: Drivetrain
+    auto_steps: List[Step]
+    step_index: int
 
     def robotInit(self) -> None:
         self.time = Timer()
@@ -33,40 +38,63 @@ class Robot(TimedRobot):
         self.arm = Arm(self.pipeline)
         self.claw = Claw(self.pipeline)
 
+        def step_1():
+            self.pipeline.throttle_constant(0.5)
+            if self.drivetrain.m_odometry == None:
+                return self.time.get() > 5
+            else:
+                return self.drivetrain.m_odometry.getPose().translation().Y() >= 3.6576
+
+        def step_2():
+            self.pipeline.throttle_constant(-0.5)
+            if self.drivetrain.m_odometry == None:
+                return self.time.get() > 10
+            else:
+                return self.drivetrain.m_odometry.getPose().translation().Y() <= 1.2446
+
+        self.auto_steps = [
+            Step(step_1),
+            Step(step_2)
+        ]
+
+        self.step_index = 0
+
+    def robotPeriodic(self) -> None:
+        self.drivetrain.updateOdometry()
+
     def teleopInit(self) -> None:
+        self.time.reset()
         self.time.start()
         self.pipeline.set_mode(Mode.TELEOP)
         self.claw.compressor.enableDigital()
 
     def teleopPeriodic(self) -> None:
-        # self.drivetrain.drive()
-        # self.arm.run_checks()
+        self.drivetrain.drive()
+        self.arm.run_checks()
         self.claw.run_checks()
 
     def teleopExit(self) -> None:
         self.time.stop()
 
     # TODO: Implement Auto
-    def autonomousInit(self) -> None: ...
+    def autonomousInit(self) -> None:
+        self.time.reset()
+        self.time.start()
+        self.pipeline.set_mode(Mode.AUTO)
 
-    def autonomousPeriodic(self) -> None: ...
+    def autonomousPeriodic(self) -> None:
+        if self.auto_steps[self.step_index].callback():
+            self.step_index += 1
 
-    def autonomousExit(self) -> None: ...
+    def autonomousExit(self) -> None:
+        self.time.stop()
 
-    # def testInit(self) -> None:
-        # self.swerve = Drivetrain()
+    def testInit(self) -> None:
+        self.pipeline.set_mode(Mode.TELEOP)
+        self.drivetrain = Swerve2(self.pipeline)
 
-    # def testPeriodic(self) -> None:
-    #     def clamp(num, min_value):
-    #         if abs(num) < min_value:
-    #             return 0
-    #         return num
-    #
-    #     leftx1 = wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1)
-    #     lefty1 = wpimath.applyDeadband(self.pipeline.throttle(), 0.05, 1)
-    #     rightx1 = wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1)
-
-        # self.swerve.drive(leftx1, lefty1, rightx1, True)
+    def testPeriodic(self) -> None:
+        self.drivetrain.drive()
 
 
 if __name__ == "__main__":
