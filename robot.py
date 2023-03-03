@@ -1,5 +1,7 @@
+import wpimath
 from wpilib import *
 
+from drivetrain.drivetrain import *
 from appendage.arm import Arm
 from appendage.claw import Claw
 from drivetrain.chassis import Chassis
@@ -10,7 +12,6 @@ from tools import PipelineManager, Mode
 
 
 class Robot(TimedRobot):
-
     # TODO: Merge and incorporate other classes
     time: Timer
     pilot: XboxController
@@ -19,6 +20,7 @@ class Robot(TimedRobot):
     limelight: Limelight
     arm: Arm
     claw: Claw
+    swerve: Drivetrain
 
     def robotInit(self) -> None:
         self.time = Timer()
@@ -44,8 +46,25 @@ class Robot(TimedRobot):
 
     # TODO: Implement Auto
     def autonomousInit(self) -> None: ...
+
     def autonomousPeriodic(self) -> None: ...
+
     def autonomousExit(self) -> None: ...
+
+    def testInit(self) -> None:
+        self.swerve = Drivetrain()
+
+    def testPeriodic(self) -> None:
+        def clamp(num, min_value):
+            if abs(num) < min_value:
+                return 0
+            return num
+
+        leftx1 = wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1)
+        lefty1 = wpimath.applyDeadband(self.pipeline.throttle(), 0.05, 1)
+        rightx1 = wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1)
+
+        self.swerve.drive(leftx1, lefty1, rightx1, True)
 
 
 if __name__ == "__main__":
