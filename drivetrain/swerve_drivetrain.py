@@ -4,7 +4,7 @@ from wpilib import *
 from wpimath.geometry import *
 from wpimath.kinematics import *
 
-from swerve_module import *
+from drivetrain.swerve_module import *
 
 
 kMaxAngularSpeed = math.pi  # 1/2 rotation per second

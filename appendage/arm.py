@@ -94,7 +94,6 @@ class Arm:
             target = -48 * self.inch_to_ticks
         self.arm_e.set(ControlMode.Position, target)
 
-
     def pivot(self):
         target = 0.0
         if self.pipeline.point_1():

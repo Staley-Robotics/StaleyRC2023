@@ -1,7 +1,7 @@
 import wpimath
 from wpilib import *
 
-from drivetrain.drivetrain import *
+# from drivetrain.swerve_drivetrain import *
 from appendage.arm import Arm
 from appendage.claw import Claw
 from drivetrain.chassis import Chassis
@@ -15,16 +15,18 @@ class Robot(TimedRobot):
     # TODO: Merge and incorporate other classes
     time: Timer
     pilot: XboxController
+    other: XboxController
     pipeline: PipelineManager
     drivetrain: Chassis
     limelight: Limelight
     arm: Arm
     claw: Claw
-    swerve: Drivetrain
+    # swerve: Drivetrain
 
     def robotInit(self) -> None:
         self.time = Timer()
         self.pilot = XboxController(0)
+        self.other = XboxController(1)
         self.pipeline = PipelineManager(self.pilot)
         self.drivetrain = Swerve(self.pipeline)
         self.limelight = Limelight()
@@ -51,20 +53,20 @@ class Robot(TimedRobot):
 
     def autonomousExit(self) -> None: ...
 
-    def testInit(self) -> None:
-        self.swerve = Drivetrain()
+    # def testInit(self) -> None:
+        # self.swerve = Drivetrain()
 
-    def testPeriodic(self) -> None:
-        def clamp(num, min_value):
-            if abs(num) < min_value:
-                return 0
-            return num
+    # def testPeriodic(self) -> None:
+    #     def clamp(num, min_value):
+    #         if abs(num) < min_value:
+    #             return 0
+    #         return num
+    #
+    #     leftx1 = wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1)
+    #     lefty1 = wpimath.applyDeadband(self.pipeline.throttle(), 0.05, 1)
+    #     rightx1 = wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1)
 
-        leftx1 = wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1)
-        lefty1 = wpimath.applyDeadband(self.pipeline.throttle(), 0.05, 1)
-        rightx1 = wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1)
-
-        self.swerve.drive(leftx1, lefty1, rightx1, True)
+        # self.swerve.drive(leftx1, lefty1, rightx1, True)
 
 
 if __name__ == "__main__":

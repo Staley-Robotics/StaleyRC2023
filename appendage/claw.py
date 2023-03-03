@@ -20,7 +20,7 @@ class Claw:
         self.compressor.disable()
 
     def run_checks(self):
-        print(self.compressor.getPressureSwitchValue())
+        # print(self.compressor.getPressureSwitchValue())
         if self.compressor.isEnabled() and self.compressor.getPressureSwitchValue():
             self.compressor.disable()
         elif not self.compressor.isEnabled():

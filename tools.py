@@ -47,15 +47,15 @@ class PipelineManager:
         self.rotation = self.controllers[0].getLeftX
         self.direction_x = self.controllers[0].getRightX
         self.direction_y = self.controllers[0].getRightY
-        self.point_1 = self.controllers[0].getAButtonPressed
-        self.point_2 = self.controllers[0].getBButtonPressed
+        self.point_1 = lambda: 0  # self.controllers[0].getAButtonPressed
+        self.point_2 = lambda: 0  # self.controllers[0].getBButtonPressed
         self.point_3 = self.controllers[0].getXButtonPressed
         self.point_4 = self.controllers[0].getYButtonPressed
         self.pivot_axis = self.controllers[0].getRightTriggerAxis
         self.pivot_negative_axis = self.controllers[0].getLeftTriggerAxis
-        self.shaft_axis = self.controllers[0].getRightY
-        self.grip = self.controllers[0].getRightBumperPressed
-        self.release = self.controllers[0].getRightBumperPressed
+        self.shaft_axis = lambda: 0  # self.controllers[0].getRightY
+        self.grip = self.controllers[0].getAButtonPressed
+        self.release = self.controllers[0].getBButtonPressed
 
 
 class Gains:
