@@ -116,20 +116,37 @@ class SwerveModule:
   * @param desiredState Desired state with speed and angle.
   """
 
-    def setDesiredState(self, desired_state):
+    def setDesiredState(self, desiredState):
+        # Constants
+        wheelRadius = 0.05  # 5 CM
+        wheelMetersPerRevolution = 2 * wheelRadius * math.pi
+        driveTicksPerRevolution = 2048
+        rotationTicksPerRevolution = 2048
+        rotationGearRatio = 10  # 10 motor revolutions per 1 gear revolution
+
+        # Get Current Angle Once (because it is used multiple times)
+        currentRotationPos = self.m_turning_motor.getSelectedSensorPosition()  # Current Sensor Position
+        currentRotationRadians = currentRotationPos / rotationGearRatio / rotationTicksPerRevolution * 2 * math.pi  # Radians
+        currentRotation = Rotation2d(currentRotationRadians)  # Create Rotation2d Object
+
         # Optimize the reference state to avoid spinning further than 90 degrees
-        state = SwerveModuleState.optimize(desired_state, Rotation2d(
-            self.m_turning_motor.getSelectedSensorPosition() * 2 * math.pi / 2048))
+        state = SwerveModuleState.optimize(desiredState, currentRotation)
+
+        # Drive Velocity
+        driveVelocityTicksPer100ms = self.m_drive_motor.getSelectedSensorVelocity()
+        driveVelocityRevolutionsPerSec = driveVelocityTicksPer100ms * 10 / driveTicksPerRevolution
+        driveVelocityMetersPerSecond = driveVelocityRevolutionsPerSec * wheelMetersPerRevolution
+
         # Calculate the drive output from the drive PID controller.
-        drive_output = self.m_drive_PID_controller.calculate(
-            self.m_drive_motor.getSelectedSensorVelocity() * 0.1 * 2 * math.pi / 2048, state.speed)
+        # driveOutput = self.m_drivePIDController.calculate(driveVelocityMetersPerSecond, state.speed)
+        driveOutput = min(state.speed, 1.0) * 4
+        driveFeedforward = self.m_drive_feedforward.calculate(state.speed)
 
-        drive_feedforward = self.m_drive_feedforward.calculate(state.speed)
-
+        # print( currentRotation.degrees() )
         # Calculate the turning motor output from the turning PID controller.
-        turn_output = self.m_turning_PID_controller.calculate(
-            self.m_turning_motor.getSelectedSensorPosition() * 2 * math.pi / 2048, state.angle.radians() * 10)
-        turn_feedforward = self.m_turn_feedforward.calculate(self.m_turning_PID_controller.getSetpoint().velocity)
+        turnOutput = self.m_turning_PID_controller.calculate(currentRotation.radians(), state.angle.radians())
+        turnFeedforward = self.m_turn_feedforward.calculate(self.m_turning_PID_controller.getSetpoint().velocity)
 
-        self.m_drive_motor.setVoltage(drive_output + drive_feedforward)
-        self.m_turning_motor.setVoltage(turn_output + turn_feedforward)
+        self.m_drive_motor.setVoltage(driveOutput)  # + driveFeedforward)
+        self.m_turning_motor.setVoltage(turnOutput + turnFeedforward)
+        # self.m_turningMotor.set( ctre.ControlMode.Position, int( state.angle.degrees() / 360 * kEncoderResolution * 10 ) )
