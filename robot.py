@@ -1,16 +1,10 @@
-from typing import List
-
-import wpimath
 from wpilib import *
 
-# from drivetrain.swerve_drivetrain import *
 from appendage.arm import Arm
 from appendage.claw import Claw
 from autonomous.step import Step
 from drivetrain.chassis import Chassis
-from drivetrain.swerve_drivetrain import Swerve2
 from drivetrain.swerve_raw import Swerve
-from drivetrain.tank import Tank
 from optics.limelight import Limelight
 from tools import PipelineManager, Mode
 
@@ -25,42 +19,27 @@ class Robot(TimedRobot):
     limelight: Limelight
     arm: Arm
     claw: Claw
-    auto_steps: List[Step]
+    auto_steps: list[Step]
     step_index: int
+    process: Process
 
     def robotInit(self) -> None:
         self.time = Timer()
         self.pilot = XboxController(0)
         self.other = XboxController(1)
         self.pipeline = PipelineManager(self.pilot, self.other)
-        self.drivetrain = Swerve2(self.pipeline)
+        self.drivetrain = Swerve(self.pipeline)
         self.limelight = Limelight()
         self.arm = Arm(self.pipeline)
         self.claw = Claw(self.pipeline)
-
-        def step_1():
-            self.pipeline.throttle_constant(0.5)
-            if self.drivetrain.m_odometry == None:
-                return self.time.get() > 5
-            else:
-                return self.drivetrain.m_odometry.getPose().translation().Y() >= 3.6576
-
-        def step_2():
-            self.pipeline.throttle_constant(-0.5)
-            if self.drivetrain.m_odometry == None:
-                return self.time.get() > 10
-            else:
-                return self.drivetrain.m_odometry.getPose().translation().Y() <= 1.2446
-
-        self.auto_steps = [
-            Step(step_1),
-            Step(step_2)
-        ]
-
-        self.step_index = 0
+        self.process = Process([
+            Step(
+                self.drivetrain.goto, 0, 12
+            )
+        ])
 
     def robotPeriodic(self) -> None:
-        self.drivetrain.updateOdometry()
+        self.drivetrain.updatePosition()
 
     def teleopInit(self) -> None:
         self.time.reset()
@@ -81,6 +60,7 @@ class Robot(TimedRobot):
         self.time.reset()
         self.time.start()
         self.pipeline.set_mode(Mode.AUTO)
+        self.process.begin()
 
     def autonomousPeriodic(self) -> None:
         if self.auto_steps[self.step_index].callback():

@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Tuple
 
 from wpilib import *
 
@@ -12,8 +11,8 @@ class Mode(Enum):
 
 
 class PipelineManager:
-    controllers: Tuple[XboxController, ...]
-    throttle: any
+    controllers: tuple[XboxController, ...]
+    drive: any
     rotation: any
     direction_x: any
     direction_y: any
@@ -34,7 +33,7 @@ class PipelineManager:
     def set_mode(self, mode: Mode):
         self.mode = mode
         if self.mode == Mode.AUTO:
-            self.throttle = None
+            self.drive = None
             self.rotation = None
             self.direction_x = None
             self.direction_y = None
@@ -45,7 +44,7 @@ class PipelineManager:
             self.shaft_axis = None
             self.grip = None
         elif self.mode == Mode.TELEOP:
-            self.throttle = self.controllers[0].getLeftY
+            self.drive = self.controllers[0].getLeftY
             self.rotation = self.controllers[0].getLeftX
             self.direction_x = self.controllers[0].getRightX
             self.direction_y = self.controllers[0].getRightY
@@ -59,8 +58,8 @@ class PipelineManager:
             self.grip = self.controllers[1].getRightBumperPressed
             self.release = self.controllers[1].getLeftBumperPressed
 
-    def throttle_constant(self, val):
-        self.throttle = val
+    def drive_constant(self, val):
+        self.drive = val
 
     def rotation_constant(self, val):
         self.rotation = val
