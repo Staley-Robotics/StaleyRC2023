@@ -7,6 +7,7 @@ from drivetrain.chassis import Chassis
 from drivetrain.swerve_raw import Swerve
 from optics.limelight import Limelight
 from tools import PipelineManager, Mode
+from autonomous.process import Process
 
 
 class Robot(TimedRobot):
@@ -63,8 +64,9 @@ class Robot(TimedRobot):
         self.process.begin()
 
     def autonomousPeriodic(self) -> None:
-        if self.auto_steps[self.step_index].callback():
-            self.step_index += 1
+        # if self.auto_steps[self.step_index].callback():
+        #     self.step_index += 1
+        self.process.update()
 
     def autonomousExit(self) -> None:
         self.time.stop()
