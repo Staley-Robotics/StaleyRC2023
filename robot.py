@@ -12,7 +12,7 @@ from drivetrain.swerve_raw import Swerve
 from drivetrain.tank import Tank
 from optics.limelight import Limelight
 from tools import PipelineManager, Mode
-
+import time
 
 class Robot(TimedRobot):
     # TODO: Merge and incorporate other classes
@@ -28,38 +28,39 @@ class Robot(TimedRobot):
     step_index: int
 
     def robotInit(self) -> None:
+        time.sleep(5)
         self.time = Timer()
         self.pilot = XboxController(0)
         self.other = XboxController(1)
         self.pipeline = PipelineManager(self.pilot, self.other)
-        self.drivetrain = Swerve2(self.pipeline)
+        self.drivetrain = Swerve(self.pipeline)
         self.limelight = Limelight()
         self.arm = Arm(self.pipeline)
         self.claw = Claw(self.pipeline)
 
-        def step_1():
-            self.pipeline.throttle_constant(0.5)
-            if self.drivetrain.m_odometry == None:
-                return self.time.get() > 5
-            else:
-                return self.drivetrain.m_odometry.getPose().translation().Y() >= 3.6576
-
-        def step_2():
-            self.pipeline.throttle_constant(-0.5)
-            if self.drivetrain.m_odometry == None:
-                return self.time.get() > 10
-            else:
-                return self.drivetrain.m_odometry.getPose().translation().Y() <= 1.2446
-
-        self.auto_steps = [
-            Step(step_1),
-            Step(step_2)
-        ]
+        # def step_1():
+        #     self.pipeline.throttle_constant(0.5)
+        #     if self.drivetrain.m_odometry == None:
+        #         return self.time.get() > 4
+        #     else:
+        #         return self.drivetrain.m_odometry.getPose().translation().Y() >= 3.6576
+        #
+        # def step_2():
+        #     self.pipeline.throttle_constant(-0.5)
+        #     if self.drivetrain.m_odometry == None:
+        #         return self.time.get() > 10
+        #     else:
+        #         return self.drivetrain.m_odometry.getPose().translation().Y() <= 1.2446
+        #
+        # self.auto_steps = [
+        #     Step(step_1),
+        #     # Step(step_2)
+        # ]
 
         self.step_index = 0
 
-    def robotPeriodic(self) -> None:
-        self.drivetrain.updateOdometry()
+    def robotPeriodic(self) -> None: ...
+        # self.drivetrain.updateOdometry()
 
     def teleopInit(self) -> None:
         self.time.reset()
@@ -82,8 +83,9 @@ class Robot(TimedRobot):
         self.pipeline.set_mode(Mode.AUTO)
 
     def autonomousPeriodic(self) -> None:
-        if self.auto_steps[self.step_index].callback():
-            self.step_index += 1
+        pass
+        # if self.auto_steps[self.step_index].callback():
+        #     self.step_index += 1
 
     def autonomousExit(self) -> None:
         self.time.stop()

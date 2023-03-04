@@ -1,5 +1,6 @@
 import math
 import ctre
+import ctre.sensors
 from wpilib import Encoder
 from wpimath.controller import *
 from wpimath.trajectory import *
@@ -49,28 +50,40 @@ class SwerveModule:
     def __init__(self,
                  drive_motor_channel,
                  turning_motor_channel,
-                 drive_encoder_channel_a,
-                 drive_encoder_channel_b,
-                 turning_encoder_channel_a,
-                 turning_encoder_channel_b):
-        self.m_turningEncoder = Encoder(turning_encoder_channel_a, turning_encoder_channel_b)
-        self.m_drive_encoder = Encoder(drive_encoder_channel_a, drive_encoder_channel_b)
+                 turning_sensor_channel,
+                 offset=0):
+#        self.m_turningEncoder = Encoder(turning_encoder_channel_a, turning_encoder_channel_b)
+#        self.m_drive_encoder = Encoder(drive_encoder_channel_a, drive_encoder_channel_b)
+        self.m_turning_encoder = ctre.sensors.WPI_CANCoder(turning_sensor_channel, "canivore1")
 
         self.m_drive_motor = ctre.WPI_TalonFX(drive_motor_channel, "canivore1")
         self.m_turning_motor = ctre.WPI_TalonFX(turning_motor_channel, "canivore1")
 
         self.m_drive_motor.configFactoryDefault()
         self.m_turning_motor.configFactoryDefault()
+        self.m_turning_encoder.configFactoryDefault()
 
-        self.m_turning_motor.setSensorPhase(False)
+        self.m_turning_motor.setSensorPhase(True)
+        self.m_turning_motor.setInverted(False)
 
-        self.m_turning_motor.setInverted(True)
+        self.m_drive_motor.configSelectedFeedbackSensor(ctre.FeedbackDevice.IntegratedSensor)
+        self.m_turning_encoder.configAbsoluteSensorRange(ctre.sensors.AbsoluteSensorRange.Unsigned_0_to_360)
+
+        self.m_turning_motor.configRemoteFeedbackFilter(self.m_turning_encoder, 0)
+        self.m_turning_motor.configSelectedFeedbackSensor(ctre.FeedbackDevice.RemoteSensor0)
 
         self.m_drive_motor.setSelectedSensorPosition(0)
         self.m_turning_motor.setSelectedSensorPosition(0)
+        self.m_turning_encoder.setPosition(self.m_turning_encoder.getAbsolutePosition()-offset)
+        #abs_pos = self.m_turning_encoder.getAbsolutePosition() #getSensorCollection().getIntegratedSensorAbsolutePosition()
+        #self.m_turning_motor.setSelectedSensorPosition(abs_pos * 56.8888889)
 
-        self.m_drive_motor.configSelectedFeedbackSensor(ctre.FeedbackDevice.IntegratedSensor)
-        self.m_turning_motor.configSelectedFeedbackSensor(ctre.FeedbackDevice.IntegratedSensor)
+        self.m_turning_motor.configClosedLoopPeriod(0, 20)
+        self.m_turning_motor.config_kP(0, 0.03)
+        #self.m_turning_motor.config_kD(0, .120)
+        #self.m_turning_motor.config_kF(0, 0.1)
+        self.m_turning_motor.configAllowableClosedloopError(0, 0.1)
+        #self.m_turning_motor.
 
         # Set the distance per pulse for the drive encoder. We can simply use the
         # distance traveled for one rotation of the wheel divided by the encoder
@@ -87,7 +100,7 @@ class SwerveModule:
             pass
         # Limit the PID Controller's input range between -pi and pi and set the input
         # to be continuous.
-        self.m_turning_PID_controller.setTolerance(500)
+        self.m_turning_PID_controller.setTolerance(100)
         self.m_turning_PID_controller.enableContinuousInput(-math.pi, math.pi)
 
     """
@@ -117,36 +130,15 @@ class SwerveModule:
   """
 
     def setDesiredState(self, desiredState):
-        # Constants
-        wheelRadius = 0.05  # 5 CM
-        wheelMetersPerRevolution = 2 * wheelRadius * math.pi
-        driveTicksPerRevolution = 2048
-        rotationTicksPerRevolution = 2048
-        rotationGearRatio = 10  # 10 motor revolutions per 1 gear revolution
-
         # Get Current Angle Once (because it is used multiple times)
-        currentRotationPos = self.m_turning_motor.getSelectedSensorPosition()  # Current Sensor Position
-        currentRotationRadians = currentRotationPos / rotationGearRatio / rotationTicksPerRevolution * 2 * math.pi  # Radians
-        currentRotation = Rotation2d(currentRotationRadians)  # Create Rotation2d Object
-
+        currentRotation = Rotation2d().fromDegrees(self.m_turning_encoder.getPosition())
         # Optimize the reference state to avoid spinning further than 90 degrees
         state = SwerveModuleState.optimize(desiredState, currentRotation)
 
         # Drive Velocity
-        driveVelocityTicksPer100ms = self.m_drive_motor.getSelectedSensorVelocity()
-        driveVelocityRevolutionsPerSec = driveVelocityTicksPer100ms * 10 / driveTicksPerRevolution
-        driveVelocityMetersPerSecond = driveVelocityRevolutionsPerSec * wheelMetersPerRevolution
-
-        # Calculate the drive output from the drive PID controller.
-        # driveOutput = self.m_drivePIDController.calculate(driveVelocityMetersPerSecond, state.speed)
         driveOutput = min(state.speed, 1.0) * 4
-        driveFeedforward = self.m_drive_feedforward.calculate(state.speed)
-
-        # print( currentRotation.degrees() )
-        # Calculate the turning motor output from the turning PID controller.
-        turnOutput = self.m_turning_PID_controller.calculate(currentRotation.radians(), state.angle.radians())
-        turnFeedforward = self.m_turn_feedforward.calculate(self.m_turning_PID_controller.getSetpoint().velocity)
-
         self.m_drive_motor.setVoltage(driveOutput)  # + driveFeedforward)
-        self.m_turning_motor.setVoltage(turnOutput + turnFeedforward)
-        # self.m_turningMotor.set( ctre.ControlMode.Position, int( state.angle.degrees() / 360 * kEncoderResolution * 10 ) )
+
+        # Rotation
+        print(self.m_drive_motor.getDeviceID(), self.m_turning_encoder.getAbsolutePosition(), self.m_turning_encoder.getPosition(), state.angle.degrees())
+        self.m_turning_motor.set(ctre.ControlMode.Position, (state.angle.degrees() * 5.68888889) )

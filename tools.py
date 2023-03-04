@@ -45,10 +45,10 @@ class PipelineManager:
             self.shaft_axis = None
             self.grip = None
         elif self.mode == Mode.TELEOP:
-            self.throttle = self.controllers[0].getLeftY
-            self.rotation = self.controllers[0].getLeftX
-            self.direction_x = self.controllers[0].getRightX
-            self.direction_y = self.controllers[0].getRightY
+            self.throttle = lambda: -self.controllers[0].getLeftY()
+            self.rotation = lambda: self.controllers[0].getLeftX()
+            self.direction_x = lambda: self.controllers[0].getRightX()
+            self.direction_y = lambda: -self.controllers[0].getRightY()
             self.point_1 = self.controllers[1].getAButtonPressed
             self.point_2 = self.controllers[1].getBButtonPressed
             self.point_3 = self.controllers[1].getXButtonPressed

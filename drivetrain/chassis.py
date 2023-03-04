@@ -11,9 +11,9 @@ class Chassis:
     rotation_multiplier: float = 0.2
     direction_multiplier: float = 0.3
     talon_srx_resolution: int = 4096
-    talon_fx_resolution: int = 2048
+    talon_fx_resolution: int = 4096
 
-    m_odometry: SwerveDrive4Odometry = None
+    # m_odometry: any = None
 
     def __init__(self, pipeline: PipelineManager):
         self.pipeline = pipeline
