@@ -5,11 +5,14 @@
 
 ## Active Branches (2/6/23)
 
-Swerve
-> John Ryan and Tyler
+Swerve (aka Vision)
+> Hudson and Tyler
  
 Arm and Claw
-> Landon and Austin
+> Austin
  
-Vision
-> Hudson and Cameron
+Limelight
+> Landon
+
+Business Team
+> Cameron and John Ryan Tarpley
