@@ -1,59 +1,82 @@
+import wpimath
 from wpilib import *
-
+from wpimath.geometry import *
+from wpimath.kinematics import *
+from ctre.sensors import WPI_Pigeon2
 from drivetrain.chassis import Chassis
 from drivetrain.swerve_module import *
 from tools import PipelineManager
 
 
+# Represents a swerve drive style drivetrain.
 class Swerve2(Chassis):
+    m_front_left_location = Translation2d(0.254, 0.305)
+    m_front_right_location = Translation2d(0.254, -0.305)
+    m_back_left_location = Translation2d(-0.254, 0.305)
+    m_back_right_location = Translation2d(-0.254, -0.305)
 
-    front_left = SwerveModule(7, 8, 0, 1, 2, 3, Translation2d(0.381, 0.381))
-    front_right = SwerveModule(5, 6, 4, 5, 6, 7, Translation2d(0.381, -0.381))
-    back_left = SwerveModule(3, 4, 8, 9, 10, 11, Translation2d(-0.381, 0.381))
-    back_right = SwerveModule(1, 2, 12, 13, 14, 15, Translation2d(-0.381, -0.381))
+    m_front_left = SwerveModule(7, 8, 18, 47.373) #-136.494)#, 1, 2, 3, 0)
+    m_front_right = SwerveModule(5, 6, 16, -134.492+180) #34.277)#, 5, 6, 7, 341)
+    m_back_left = SwerveModule(3, 4, 14, 25.996) # -161.191)#, 9, 10, 11, 1706)
+    m_back_right = SwerveModule(1, 2, 12, -113.115+180) #66.885)#, 13, 14, 15, 1365)
 
-    gyro = AnalogGyro(0)
+    m_gyro = WPI_Pigeon2(9, "rio")
 
-    kinematics: SwerveDrive4Kinematics = SwerveDrive4Kinematics(front_left.location, front_right.location,
-                                                                back_left.location, back_right.location)
-
-    odometry: SwerveDrive4Odometry = SwerveDrive4Odometry(
-        kinematics,
-        gyro.getRotation2d(),
-        (
-            front_left.getPosition(),
-            front_right.getPosition(),
-            back_left.getPosition(),
-            back_right.getPosition()
-        )
-    )
+    m_kinematics = SwerveDrive4Kinematics(m_front_left_location, m_front_right_location, m_back_left_location,
+                                          m_back_right_location)
 
     def __init__(self, pipeline: PipelineManager):
         super().__init__(pipeline)
-        self.gyro.reset()
+        # self.m_odometry = SwerveDrive4Odometry(
+        #     self.m_kinematics,
+        #     self.m_gyro.getRotation2d(),
+        #     (
+        #         self.m_front_left.getPosition(),
+        #         self.m_front_right.getPosition(),
+        #         self.m_back_left.getPosition(),
+        #         self.m_back_right.getPosition()
+        #     ),
+        #     Pose2d(Translation2d(0.0, 0.0), Rotation2d(0.0))
+        # )
+        self.m_gyro.reset()
+
+    """
+   * Method to drive the robot using joystick info.
+   *
+   * @param xSpeed Speed of the robot in the x direction (forward).
+   * @param ySpeed Speed of the robot in the y direction (sideways).
+   * @param rot Angular rate of the robot.
+   * @param fieldRelative Whether the provided x and y speeds are relative to the field.
+   """
 
     def drive(self):
-        drive_movement: ChassisSpeeds
+        drive_movement = None
         field_relative = True
+        controller = XboxController(0)
+        velocity = controller.getLeftY()
+        rotation = controller.getLeftX()
+        direction = controller.getRightX()
         if field_relative:
-            drive_movement = ChassisSpeeds.fromFieldRelativeSpeeds(self.pipeline.rotation(), self.pipeline.drive(),
-                                                                   self.pipeline.direction_x(),
-                                                                   self.gyro.getRotation2d())
+            drive_movement = ChassisSpeeds.fromFieldRelativeSpeeds(wpimath.applyDeadband(rotation, 0.05, 1.0), wpimath.applyDeadband(velocity, 0.05, 1.0),
+                                                                   wpimath.applyDeadband(direction, 0.05, 1.0) * 3.14,
+                                                                   self.m_gyro.getRotation2d())
         else:
-            drive_movement = ChassisSpeeds(self.pipeline.rotation(), self.pipeline.drive(), self.pipeline.direction_x())
+            drive_movement = ChassisSpeeds(wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1.0), wpimath.applyDeadband(self.pipeline.throttle(), 0.05, 1.0), wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1.0) * 3.14)
 
-        swerve_module_states = self.kinematics.toSwerveModuleStates(drive_movement, Translation2d(0, 0))
-        swerve_module_states = SwerveDrive4Kinematics.desaturateWheelSpeeds(swerve_module_states, max_speed)
-        self.front_left.setDesiredState(swerve_module_states[0])
-        self.front_right.setDesiredState(swerve_module_states[1])
-        self.back_left.setDesiredState(swerve_module_states[2])
-        self.back_right.setDesiredState(swerve_module_states[3])
+        swerve_module_states = self.m_kinematics.toSwerveModuleStates(drive_movement, Translation2d(0, 0))
+        swerve_module_states = SwerveDrive4Kinematics.desaturateWheelSpeeds(swerve_module_states, kMaxSpeed)
+        self.m_front_left.setDesiredState(swerve_module_states[0])
+        self.m_front_right.setDesiredState(swerve_module_states[1])
+        self.m_back_left.setDesiredState(swerve_module_states[2])
+        self.m_back_right.setDesiredState(swerve_module_states[3])
 
-    def updatePosition(self):
-        self.odometry.update(
-            self.gyro.getRotation2d(),
-            self.front_left.getPosition(),
-            self.front_right.getPosition(),
-            self.back_left.getPosition(),
-            self.back_right.getPosition()
+    """ Updates the field relative position of the robot. """
+
+    def updateOdometry(self):
+        self.m_odometry.update(
+            self.m_gyro.getRotation2d(),
+            self.m_front_left.getPosition(),
+            self.m_front_right.getPosition(),
+            self.m_back_left.getPosition(),
+            self.m_back_right.getPosition()
         )
