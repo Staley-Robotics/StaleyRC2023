@@ -1,7 +1,7 @@
 from autonomous.step import Step
-from drivetrain.swerve_raw import Swerve
-from drivetrain.chassis import Chassis
-from tools import PipelineManager, Mode
+# from drivetrain.swerve_raw import Swerve
+# from drivetrain.chassis import Chassis
+# from tools import PipelineManager, Mode
 
 
 class Process:

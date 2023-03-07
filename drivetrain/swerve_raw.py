@@ -1,4 +1,5 @@
 import math
+from enum import IntEnum
 
 from ctre import *
 from ctre.sensors import *
@@ -7,10 +8,15 @@ from drivetrain.chassis import Chassis
 from tools import *
 
 
-# fr: 6
-# bl: 2
-# br: 4
-# fl: 8
+class Motor(IntEnum):
+    BRT = 1
+    BRD = 2
+    BLT = 3
+    BLD = 4
+    FRT = 5
+    FRD = 6
+    FLT = 7
+    FLD = 8
 
 
 class Swerve(Chassis):
@@ -18,14 +24,13 @@ class Swerve(Chassis):
     speed: float
     rotation: float
     direction: float
-    throttle_left_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
-    throttle_right_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
-                        # FRONT_RIGHT_6 BACK_RIGHT_2 BACK_LEFT_4 FRONT_LEFT_8
-    rotation_pinions: Tuple[WPI_TalonFX, WPI_TalonFX, WPI_TalonFX, WPI_TalonFX]
-    rotation_pinion_offset: tuple[int, int, int, int] = (214.453, 245.391, 223.242, 223.066)
-    full_rotation: Tuple[int, int, int, int] = (-0.75, -0.25, 0.25, 0.75)
+    drive_left: tuple[WPI_TalonFX, WPI_TalonFX]
+    drive_right: tuple[WPI_TalonFX, WPI_TalonFX]
+    swivels: tuple[WPI_TalonFX, WPI_TalonFX, WPI_TalonFX, WPI_TalonFX]
+    swivel_encoders: tuple[WPI_CANCoder, WPI_CANCoder, WPI_CANCoder, WPI_CANCoder]
+    swivel_offset: tuple[int, int, int, int] = (214.453, 245.391, 223.242, 223.066)
+    full_rotation: Tuple[int, int, int, int] = (225, 315, 135, 45)
     k_gains: Gains = Gains(0.03, 0.0, 0.0, 0.0, 0, 1.0)
-    turning_encoders: tuple[WPI_CANCoder, WPI_CANCoder, WPI_CANCoder, WPI_CANCoder]
 
     def __init__(self, pipeline: PipelineManager):
         super().__init__(pipeline)
@@ -36,62 +41,54 @@ class Swerve(Chassis):
 
         self.talon_fx_resolution *= 10
 
-        self.throttle_right_pinions = (WPI_TalonFX(1, "canivore1"), WPI_TalonFX(5, "canivore1"))
-        self.throttle_left_pinions = (WPI_TalonFX(7, "canivore1"), WPI_TalonFX(3, "canivore1"))
-        self.rotation_pinions = (WPI_TalonFX(6, "canivore1"), WPI_TalonFX(2, "canivore1"),
-                                 WPI_TalonFX(4, "canivore1"), WPI_TalonFX(8, "canivore1"))
-        self.turning_encoders = (WPI_CANCoder(16, "canivore1"), WPI_CANCoder(12, "canivore1"),
-                                 WPI_CANCoder(14, "canivore1"), WPI_CANCoder(18, "canivore1"))
+        self.drive_left = (WPI_TalonFX(Motor.BLT, "canivore"), WPI_TalonFX(Motor.FLT, "canivore"))
 
-        self.throttle_right_pinions[0].setInverted(True)
-        self.throttle_right_pinions[1].setInverted(True)
+        self.drive_right = (WPI_TalonFX(Motor.BRT, "canivore"), WPI_TalonFX(Motor.FRT, "canivore"))
 
-        for p in range(len(self.rotation_pinions)):
-            pinion: WPI_TalonFX = self.rotation_pinions[p]
-            encoder: WPI_CANCoder = self.turning_encoders[p]
+        self.swivels = (WPI_TalonFX(Motor.BRD, "canivore"), WPI_TalonFX(Motor.BLD, "canivore"),
+                        WPI_TalonFX(Motor.FRD, "canivore"), WPI_TalonFX(Motor.FLD, "canivore"))
+
+        self.swivel_encoders = (WPI_CANCoder(Motor.FLD + 10, "canivore1"), WPI_CANCoder(Motor.FRD + 10, "canivore1"),
+                                WPI_CANCoder(Motor.BLD + 10, "canivore1"), WPI_CANCoder(Motor.BRD + 10, "canivore1"))
+
+        self.drive_right[0].setInverted(True)
+        self.drive_right[1].setInverted(True)
+
+        for p in range(len(self.swivels)):
+            pinion: WPI_TalonFX = self.swivels[p]
+            encoder: WPI_CANCoder = self.swivel_encoders[p]
             pinion.configFactoryDefault()
             encoder.configFactoryDefault()
+            encoder.setPosition(encoder.getAbsolutePosition() - self.swivel_offset[p])
 
-            # self.rotation_pinions[p].configRemoteFeedbackFilter(self.turning_encoder, 0)
-            # self.rotation_pinions[p].configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, PID_loop_idx, k_timeout)
+    def goto(self, x: float, y: float) -> bool:
+        self.pipeline.drive_constant(0.5)
+        self.pipeline.direction_x_constant(x)
+        self.pipeline.direction_y_constant(y)
+        return x - 0.5 < self.position[0] < x + 0.5 and y - 0.5 < self.position[1] < y + 0.5
 
-            pinion.configNominalOutputForward(0, k_timeout)
-            pinion.configNominalOutputReverse(0, k_timeout)
-            pinion.configPeakOutputForward(1, k_timeout)
-            pinion.configPeakOutputReverse(-1, k_timeout)
-
-            pinion.configClosedLoopPeriod(0, 20)
-
-            pinion.config_kF(PID_loop_idx, k_gains.kF, k_timeout)
-            pinion.config_kP(PID_loop_idx, k_gains.kP, k_timeout)
-            pinion.config_kI(PID_loop_idx, k_gains.kI, k_timeout)
-            pinion.config_kD(PID_loop_idx, k_gains.kD, k_timeout)
-
-            pinion.setInverted(True)
-
-            encoder.setPosition(encoder.getAbsolutePosition() - self.rotation_pinion_offset[p])
+    def updatePosition(self):
+        avg_throttle = (self.drive_left[0].get() + self.drive_left[1].get() + self.drive_right[0].get() +
+                        self.drive_right[1].get()) / 4
+        # MAY NEED TO SQUARE AVG DISTANCE
+        self.position[0] += self.velocity_to_distance(avg_throttle) * math.cos(self.head * math.pi) * math.cos(
+            self.direction * math.pi)
+        self.position[1] += self.velocity_to_distance(avg_throttle) * math.sin(self.head * math.pi) * math.cos(
+            self.direction * math.pi)
 
     def drive(self):
-        self.speed = self.pipeline.throttle() * self.throttle_multiplier
+        self.speed = self.pipeline.drive() * self.throttle_multiplier
         self.rotation = self.pipeline.rotation()
-        for pinion in self.throttle_left_pinions:
+        for pinion in self.drive_left:
             pinion.set(self.speed)
-        for pinion in self.throttle_right_pinions:
+        for pinion in self.drive_right:
             pinion.set(self.speed)
 
-        if pow(self.pipeline.direction_x(), 2) + pow(self.pipeline.direction_y(), 2) > 0.04:
-            self.direction = math.atan2(self.pipeline.direction_x(), -self.pipeline.direction_y()) / math.pi
-        for p in range(len(self.rotation_pinions)):
-            pinion_direction = self.full_rotation[p]
-            # pinion_direction = self.full_rotation[p] * self.rotation + self.direction * (1 - abs(self.rotation))
-            sensor = self.turning_encoders[p].getPosition() / 180 - 1
-            if sensor > 0:
-                sensor = sensor % 1
-            elif sensor < 0:
-                sensor = -(abs(sensor) % 1)
-            if pinion_direction - sensor > 0:
-                self.rotation_pinions[p].set(ControlMode.PercentOutput, abs(pinion_direction - sensor) * self.direction_multiplier)
-            elif pinion_direction - sensor < 0:
-                self.rotation_pinions[p].set(ControlMode.PercentOutput, -abs(pinion_direction - sensor) * self.direction_multiplier)
-            else:
-                self.rotation_pinions[p].set(ControlMode.PercentOutput, 0)
+        if pow(self.pipeline.direction_x(), 2) + pow(self.pipeline.direction_y(), 2) > 0.16:
+            self.direction = math.atan2(self.pipeline.direction_x(), -self.pipeline.direction_y()) / math.pi * 360
+
+        for p in range(len(self.swivels)):
+            pinion_direction = self.full_rotation[p] * self.rotation + self.direction * (1 - abs(self.rotation))
+            sensor = (self.swivel_encoders[p].getPosition() / self.talon_fx_resolution) - 1
+            diff = ((pinion_direction / 360) - sensor) - 2 * math.floor(((pinion_direction / 360) - sensor + 1) / 2)
+            self.swivels[p].set(ControlMode.PercentOutput, diff * self.direction_multiplier)

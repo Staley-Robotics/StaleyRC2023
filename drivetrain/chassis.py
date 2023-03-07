@@ -12,8 +12,8 @@ class Chassis:
     direction_multiplier: float = 0.3
     talon_srx_resolution: int = 4096
     talon_fx_resolution: int = 4096
-
-    # m_odometry: any = None
+    position: tuple[float, float]
+    head: float
 
     def __init__(self, pipeline: PipelineManager):
         self.pipeline = pipeline
@@ -21,5 +21,13 @@ class Chassis:
     def drive(self):
         print("No logic connected to drivetrain")
 
-    def updateOdometry(self):
+    def updatePosition(self):
         print("No logic connected to drivetrain")
+
+    def goto(self, x: float, y: float):
+        print("No logic connected to drivetrain")
+
+    def velocity_to_distance(self, velocity: float):
+        return velocity * 1315.18121858
+
+

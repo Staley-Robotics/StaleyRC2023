@@ -61,7 +61,7 @@ class Swerve2(Chassis):
                                                                    wpimath.applyDeadband(direction, 0.05, 1.0) * 3.14,
                                                                    self.m_gyro.getRotation2d())
         else:
-            drive_movement = ChassisSpeeds(wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1.0), wpimath.applyDeadband(self.pipeline.throttle(), 0.05, 1.0), wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1.0) * 3.14)
+            drive_movement = ChassisSpeeds(wpimath.applyDeadband(self.pipeline.rotation(), 0.05, 1.0), wpimath.applyDeadband(self.pipeline.drive(), 0.05, 1.0), wpimath.applyDeadband(self.pipeline.direction_x(), 0.05, 1.0) * 3.14)
 
         swerve_module_states = self.m_kinematics.toSwerveModuleStates(drive_movement, Translation2d(0, 0))
         swerve_module_states = SwerveDrive4Kinematics.desaturateWheelSpeeds(swerve_module_states, kMaxSpeed)
