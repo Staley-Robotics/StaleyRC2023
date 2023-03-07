@@ -20,8 +20,9 @@ class Swerve(Chassis):
     direction: float
     throttle_left_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
     throttle_right_pinions: Tuple[WPI_TalonFX, WPI_TalonFX]
+                        # FRONT_RIGHT_6 BACK_RIGHT_2 BACK_LEFT_4 FRONT_LEFT_8
     rotation_pinions: Tuple[WPI_TalonFX, WPI_TalonFX, WPI_TalonFX, WPI_TalonFX]
-    rotation_pinion_offset: tuple[int, int, int, int] = (47.373, -154.492+180, 15.996, -158.115+180)
+    rotation_pinion_offset: tuple[int, int, int, int] = (214.453, 245.391, 223.242, 223.066)
     full_rotation: Tuple[int, int, int, int] = (-0.75, -0.25, 0.25, 0.75)
     k_gains: Gains = Gains(0.03, 0.0, 0.0, 0.0, 0, 1.0)
     turning_encoders: tuple[WPI_CANCoder, WPI_CANCoder, WPI_CANCoder, WPI_CANCoder]
@@ -51,9 +52,6 @@ class Swerve(Chassis):
             pinion.configFactoryDefault()
             encoder.configFactoryDefault()
 
-            encoder.configMagnetOffset(self.rotation_pinion_offset[p])
-            encoder.setPositionToAbsolute()
-
             # self.rotation_pinions[p].configRemoteFeedbackFilter(self.turning_encoder, 0)
             # self.rotation_pinions[p].configSelectedFeedbackSensor(FeedbackDevice.RemoteSensor0, PID_loop_idx, k_timeout)
 
@@ -71,7 +69,7 @@ class Swerve(Chassis):
 
             pinion.setInverted(True)
 
-            # encoder.setPosition(encoder.getAbsolutePosition() - self.rotation_pinion_offset[p])
+            encoder.setPosition(encoder.getAbsolutePosition() - self.rotation_pinion_offset[p])
 
     def drive(self):
         self.speed = self.pipeline.throttle() * self.throttle_multiplier
@@ -84,13 +82,16 @@ class Swerve(Chassis):
         if pow(self.pipeline.direction_x(), 2) + pow(self.pipeline.direction_y(), 2) > 0.04:
             self.direction = math.atan2(self.pipeline.direction_x(), -self.pipeline.direction_y()) / math.pi
         for p in range(len(self.rotation_pinions)):
-            pinion_direction = self.direction
-            # pinion_direction = self.full_rotation[p]
+            pinion_direction = self.full_rotation[p]
             # pinion_direction = self.full_rotation[p] * self.rotation + self.direction * (1 - abs(self.rotation))
             sensor = self.turning_encoders[p].getPosition() / 180 - 1
+            if sensor > 0:
+                sensor = sensor % 1
+            elif sensor < 0:
+                sensor = -(abs(sensor) % 1)
             if pinion_direction - sensor > 0:
-                self.rotation_pinions[p].set(ControlMode.PercentOutput, (abs(pinion_direction - sensor) % 1) * self.direction_multiplier)
+                self.rotation_pinions[p].set(ControlMode.PercentOutput, abs(pinion_direction - sensor) * self.direction_multiplier)
             elif pinion_direction - sensor < 0:
-                self.rotation_pinions[p].set(ControlMode.PercentOutput, -(abs(pinion_direction - sensor) % 1) * self.direction_multiplier)
+                self.rotation_pinions[p].set(ControlMode.PercentOutput, -abs(pinion_direction - sensor) * self.direction_multiplier)
             else:
                 self.rotation_pinions[p].set(ControlMode.PercentOutput, 0)
