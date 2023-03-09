@@ -1,95 +1,74 @@
-import math
+from typing import List
 
-from ctre import WPI_TalonFX, WPI_VictorSPX, WPI_TalonSRX, FeedbackDevice
-import wpilib
-import wpilib.drive
-import wpimath
-import wpimath.controller
-import wpimath.trajectory
-
-from drivetrain import Drivetrain
-from arm import ArmedExtension, ArmedRotation
-from pcm import Pcm
-from claw import Claw
+from drivetrain.swerve_drivetrain import *
+from appendage.arm import Arm
+from appendage.claw import Claw
+# from autonomous.step import Step
+# from drivetrain.chassis import Chassis
+# from drivetrain.swerve_raw import Swerve
+from optics.limelight import Limelight
+from tools import PipelineManager, Mode
 
 
-class Robot(wpilib.TimedRobot):
-    time: wpilib.Timer
-    controller1: wpilib.XboxController
-    controller2: wpilib.XboxController
-    drivetrain: Drivetrain
-    arm_ext: ArmedExtension
-    arm_rot: ArmedRotation
-    pcm: Pcm
+class Robot(TimedRobot):
+    # TODO: Merge and incorporate other classes
+    pilot: XboxController
+    other: XboxController
+    pipeline: PipelineManager
+    drivetrain: Chassis
+    limelight: Limelight
+    arm: Arm
     claw: Claw
+    # auto_steps: List[Step]
+    step_index: int
 
-    extendMotor: WPI_TalonSRX
-    extendPID: wpimath.controller.PIDController
-    extendFeedForward: wpimath.controller.SimpleMotorFeedforwardMeters
+    def robotInit(self) -> None:
+        self.pilot = XboxController(0)
+        self.other = XboxController(1)
+        self.pipeline = PipelineManager(Timer(), self.pilot, self.other)
+        # self.drivetrain = Swerve(self.pipeline)
+        self.limelight = Limelight()
+        self.arm = Arm(self.pipeline)
+        self.claw = Claw(self.pipeline)
+        # self.auto_steps = [
+        #     Step(self.drivetrain.goto, 0.0, 12.0)
+        # ]
+        # self.step_index = 0
 
-    def robotInit(self):
+    # def robotPeriodic(self) -> None:
+        # self.drivetrain.updatePosition()
 
-        self.time = wpilib.Timer()
-        self.controller1 = wpilib.XboxController(0)
-        self.controller2 = wpilib.XboxController(1)
-        self.drivetrain = Drivetrain()
-        # self.arm = ArmedExtension(WPI_TalonFX(11), WPI_VictorSPX(9))
-        self.arm_rot = ArmedRotation()
-        self.arm_ext = ArmedExtension()
-        # self.pcm = Pcm(wpilib.PneumaticsControlModule(0))
-        # self.claw = Claw(self.pcm.getSolendoid(1))
+    def teleopInit(self) -> None:
+        self.pipeline.set_mode(Mode.TELEOP)
+        self.claw.compressor.enableDigital()
 
-        try:
-            pdp = wpilib.PowerDistribution(0, wpilib.PowerDistribution.ModuleType.kCTRE)
-            faults = pdp.getStickyFaults()
-            print(f'{faults.print()}')
-            pdp.clearStickyFaults()
-        except Exception as e:
-            print(e)
+    def teleopPeriodic(self) -> None:
+        self.drivetrain.drive()
+        self.arm.run_checks()
+        self.claw.run_checks()
 
-    def autonomousInit(self):
-        self.time.reset()
-        self.time.start()
+    def teleopExit(self) -> None:
+        self.pipeline.set_mode(Mode.DISABLED)
 
-    def autonomousPeriodic(self):
-        pass
+    # TODO: Implement Auto
+    def autonomousInit(self) -> None:
+        self.pipeline.set_mode(Mode.AUTO)
 
-    def autonomousExit(self):
-        self.time.stop()
+    def autonomousPeriodic(self) -> None:
+        if self.auto_steps[self.step_index].callback():
+            self.step_index += 1
 
-    def teleopInit(self):
-        self.time.start()
+    def autonomousExit(self) -> None:
+        self.pipeline.set_mode(Mode.DISABLED)
 
-    def teleopPeriodic(self):
+    def testInit(self) -> None:
+        self.pipeline.set_mode(Mode.TELEOP)
+        # self.drivetrain = Swerve(self.pipeline)
 
-        self.drivetrain.update()
-        self.arm.update()
-        self.pcm.update()
-
-        if self.controller1.getAButtonPressed():
-            self.claw.update()
-
-    def teleopExit(self):
-        self.time.stop()
-
-    def testInit(self):
-        self.pos = 0
-
-    def testPeriodic(self):
-        # self.arm_rot.loop(self.controller1.getLeftY())
-        # self.arm_ext.extendLStick(self.controller1.getLeftY())
-        self.arm_ext.stepExtend(self.controller1.getLeftBumperPressed(), self.controller1.getRightBumperPressed())
-
-        # if self.controller1.getAButtonPressed():
-        #     self.pos = 0
-        # elif self.controller1.getBButtonPressed():
-        #     self.pos = 1
-        # elif self.controller1.getYButtonPressed():
-        #     self.pos = 2
-        # elif self.controller1.getXButtonPressed():
-        #     self.pos = 3
-        # self.arm_rot.loop(self.pos)
+    def testPeriodic(self) -> None:
+        # self.drivetrain.drive()
+        self.arm.run_checks()
 
 
 if __name__ == "__main__":
-    wpilib.run(Robot)
+    run(Robot)

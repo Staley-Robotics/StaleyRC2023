@@ -2,6 +2,7 @@
 # placidly placing purple plaques
 # sadistically spacing sanguine serpents
 # tremulously tracking tramping truant tripe
+import wpilib
 from ctre import *
 
 from tools import *
@@ -25,10 +26,10 @@ class Arm:
     integrated_encoder: int = 2048
     pivot_ratio: int = 200
     degrees_to_ticks = integrated_encoder/360 * pivot_ratio
-    pivot_bay: float = 0.0  # needs tuning
-    pivot_low: float = 10.0 * self.degrees_to_ticks  # needs tuning
-    pivot_mid: float = 45.0 * degrees_to_ticks  # needs tuning
-    pivot_top: float = 95.0 * degrees_to_ticks  # needs tuning
+    pivot_bay: float = 10 * degrees_to_ticks
+    pivot_low: float = 20.0 * degrees_to_ticks
+    pivot_mid: float = 75.0 * degrees_to_ticks
+    pivot_top: float = 60.0 * degrees_to_ticks
 
     arm_r = WPI_TalonFX(9, "rio")
     arm_e = WPI_TalonFX(31, "rio")
@@ -83,9 +84,11 @@ class Arm:
 
         # for list pivot function
         self.possiblePos = [self.pivot_bay, self.pivot_low, self.pivot_mid, self.pivot_top]
-        self.index = 0
+        self.index: int = 0
         self.ad = 0
         self.curPos = 0
+        self.target = 0
+        self.log = -1
 
     def run_checks(self):
         self.extend_stickler()
@@ -95,7 +98,7 @@ class Arm:
     def rotate_stickler(self):
         self.pivot_atm += self.pipeline.pivot_axis() * 0.5 * self.degrees_to_ticks
         self.pivot_atm -= self.pipeline.pivot_negative_axis() * 0.5 * self.degrees_to_ticks
-        # self.pipeline.pivot_axis() * 90 * self.degrees_to_ticks
+        # self.pipeline.pivot_axis() * 90 * self.degrees_to_ticks BAD CODE DON'T USE
         self.arm_r.set(ControlMode.Position, self.pivot_atm)
 
     def extend_stickler(self):
@@ -105,39 +108,46 @@ class Arm:
         self.arm_e.set(ControlMode.Position, target)
 
     def pivot(self):
-        target = 0.0
         if self.pipeline.point_1():
-            target = self.pivot_bay
+            if self.pivot_bay >= self.target > 0:
+                self.target -= 1 * self.degrees_to_ticks
+            elif self.target <= 0:
+                self.target = 0
+            else:
+                self.target = self.pivot_bay
         elif self.pipeline.point_2():
-            target = self.pivot_low
+            self.target = self.pivot_low
         elif self.pipeline.point_3():
-            target = self.pivot_mid
+            self.target = self.pivot_mid
         elif self.pipeline.point_4():
-            target = self.pivot_top
+            self.target = self.pivot_top
 
-        self.arm_r.set(ControlMode.Position, target)
+        self.arm_r.set(ControlMode.Position, self.target)
         print("Encoder " + str(self.arm_r.getSelectedSensorPosition()))
-        print("Target " + str(target))
-        print("Screw Up Amount " + str(abs(target - self.arm_r.getSelectedSensorPosition())))
+        print("Target " + str(self.target))
+        print("Screw Up Amount " + str(abs(self.target - self.arm_r.getSelectedSensorPosition())))
 
     def listPivot(self):
-        if self.pipeline.point_next:
-            if self.index < self.possiblePos.length:
+
+        if self.pipeline.point_2:
+            if self.index < len(self.possiblePos)-1 and self.log > self.pipeline.time.get()-20:
                 self.index += 1
                 self.ad = 0
-        elif self.pipeline.point_prev:
+                self.log = self.pipeline.time.get()
+        elif self.pipeline.point_3 and self.log > self.pipeline.time.get()-20:
             if self.index > 0:
                 self.index -= 1
                 self.ad = 0
-        target = self.possiblePos[self.index]
-        if self.pipeline.point_plus:
+                log = self.pipeline.time.get()
+        print(self.index)
+        target = self.possiblePos[int(self.index)]
+        if self.pipeline.point_1:
             self.ad += 1 * self.degrees_to_ticks
-        elif self.pipeline.point_minus:
+        elif self.pipeline.point_4:
             self.ad -= 1 * self.degrees_to_ticks
         target += self.ad
-        self.curPos = possiblePos[self.index]
+        self.curPos = self.possiblePos[int(self.index)]
         self.arm_r.set(ControlMode.Position, target)
-
 
     def extend(self):
         target = 0.0
