@@ -1,6 +1,6 @@
 from networktables import NetworkTables
 
-table = NetworkTables.getTable("limelight")
+table = NetworkTables.getTable("limelight-two")
 
 
 class Limelight:
