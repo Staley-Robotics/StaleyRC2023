@@ -1,17 +1,22 @@
-# from networktables import NetworkTables
+from networktables import NetworkTables
+
+table = NetworkTables.getTable("limelight")
 
 
 class Limelight:
-    pass
 
-# table = NetworkTables.getTable("limelight")
-# tx = table.getNumber('tx',None)
-# ty = table.getNumber('ty',None)
-# ta = table.getNumber('ta',None)
-# ts = table.getNumber('ts',None)
+    def __init__(self):
 
-# self.state = NetworkTableInstance.getDefault()
-# self.config = self.state.getTable("limelight")
-# self.led_state = self.config.getEntry('ledMode')
-# self.cam_mode = self.config.getEntry('camMode')
-# self.pipeline_index = self.config.getEntry('pipeline')
+        table.putNumber('ledMode', 0)
+        table.putNumber('camMode', 0)
+        table.putNumber('stream', 2)
+        table.putNumber('pipeline', 0)
+
+    def look(self):
+
+        tx = table.getNumber('tx', None)
+        ty = table.getNumber('ty', None)
+        # ta = table.getNumber('ta', None)
+        # ts = table.getNumber('ts', None)
+
+        print(f"targets = {tx}", f"offset = {ty}")
