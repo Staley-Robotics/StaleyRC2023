@@ -83,9 +83,11 @@ class Arm:
         self.arm_e.selectProfileSlot(0, 0)
 
         # for list pivot function
-        self.possiblePos = [self.pivot_bay, self.pivot_low, self.pivot_mid, self.pivot_top]
+        self.possiblePivotPos = [self.pivot_bay, self.pivot_low, self.pivot_mid, self.pivot_top]
+        self.possibleExtendPos = [self.shaft_bay, self.shaft_low, self.shaft_mid, self.shaft_top]
         self.index: int = 0
-        self.ad = 0
+        self.pivotAd = 0
+        self.extendAd = 0
         self.curPos = 0
         self.target = 0
         self.log = -1
@@ -128,25 +130,24 @@ class Arm:
         print("Screw Up Amount " + str(abs(self.target - self.arm_r.getSelectedSensorPosition())))
 
     def listPivot(self):
-
         if self.pipeline.point_2:
-            if self.index < len(self.possiblePos)-1 and self.log > self.pipeline.time.get()-20:
+            if self.index < len(self.possiblePivotPos)-1 and self.log > self.pipeline.time.get()-20:
                 self.index += 1
-                self.ad = 0
+                self.pivotAd = 0
                 self.log = self.pipeline.time.get()
         elif self.pipeline.point_3 and self.log > self.pipeline.time.get()-20:
             if self.index > 0:
                 self.index -= 1
-                self.ad = 0
-                log = self.pipeline.time.get()
+                self.pivotAd = 0
+                self.log = self.pipeline.time.get()
         print(self.index)
-        target = self.possiblePos[int(self.index)]
+        target = self.possiblePivotPos[int(self.index)]
         if self.pipeline.point_1:
-            self.ad += 1 * self.degrees_to_ticks
+            self.pivotAd += 1 * self.degrees_to_ticks
         elif self.pipeline.point_4:
-            self.ad -= 1 * self.degrees_to_ticks
-        target += self.ad
-        self.curPos = self.possiblePos[int(self.index)]
+            self.pivotAd -= 1 * self.degrees_to_ticks
+        target += self.pivotAd
+        self.curPos = self.possiblePivotPos[int(self.index)]
         self.arm_r.set(ControlMode.Position, target)
 
     def extend(self):
@@ -165,3 +166,24 @@ class Arm:
         print("Encoder " + str(self.arm_e.getSelectedSensorPosition()))
         print("Target " + str(target))
         print("Screw Up Amount " + str(abs(target - self.arm_e.getSelectedSensorPosition())))
+
+    def listExtend(self):
+        if self.pipeline.point_2:
+            if self.index < len(self.possibleExtendPos) - 1 and self.log > self.pipeline.time.get() - 20:
+                self.index += 1
+                self.extendAd = 0
+                self.log = self.pipeline.time.get()
+        elif self.pipeline.point_3 and self.log > self.pipeline.time.get() - 20:
+            if self.index > 0:
+                self.index -= 1
+                self.extendAd = 0
+                self.log = self.pipeline.time.get()
+        print(self.index)
+        target = self.possibleExtendPos[int(self.index)]
+        if self.pipeline.point_1:
+            self.extendAd += 1 * self.degrees_to_ticks
+        elif self.pipeline.point_4:
+            self.extendAd -= 1 * self.degrees_to_ticks
+        target += self.extendAd
+        self.curPos = self.possibleExtendPos[int(self.index)]
+        self.arm_e.set(ControlMode.Position, target)
