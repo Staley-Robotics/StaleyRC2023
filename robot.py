@@ -4,7 +4,6 @@ from appendage.arm import Arm
 from appendage.claw import Claw
 from autonomous.step import Step
 from drivetrain.chassis import Chassis
-from drivetrain.swerve_raw import Swerve
 from optics.limelight import Limelight
 from tools import PipelineManager, Mode
 from autonomous.process import Process
@@ -29,7 +28,7 @@ class Robot(TimedRobot):
         self.pilot = XboxController(0)
         self.other = XboxController(1)
         self.pipeline = PipelineManager(self.pilot, self.other)
-        self.drivetrain = Swerve(self.pipeline)
+        # self.drivetrain = Swerve(self.pipeline)
         self.limelight = Limelight()
         self.arm = Arm(self.pipeline)
         self.claw = Claw(self.pipeline)
@@ -55,8 +54,6 @@ class Robot(TimedRobot):
 
     def teleopExit(self) -> None:
         self.time.stop()
-
-    # TODO: Implement Auto
     def autonomousInit(self) -> None:
         self.time.reset()
         self.time.start()
