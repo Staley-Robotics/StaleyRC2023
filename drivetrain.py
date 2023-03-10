@@ -8,10 +8,10 @@ class Drivetrain:
     last_rotation = 0
 
     def __init__(self):
-        self.front_left = ctre.WPI_TalonFX(1, "rio")
-        self.back_left = ctre.WPI_TalonFX(2, "rio")
-        self.front_right = ctre.WPI_TalonFX(3, "rio")
-        self.back_right = ctre.WPI_TalonFX(4, "rio")
+        self.front_left = ctre.VictorSPX(1)
+        self.back_left = ctre.VictorSPX(2)
+        self.back_right = ctre.VictorSPX(3)
+        self.front_right = ctre.VictorSPX(4)
 
     def drive(self, speed: float, rotation: float):
         speed *= 0.7

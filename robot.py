@@ -8,14 +8,16 @@ class Robot(wpilib.TimedRobot):
 
     time: wpilib.Timer
     drivetrain: Drivetrain
-    controller1: wpilib.XboxController
-    controller2: wpilib.XboxController
+    controllerStick: wpilib.Joystick
+    # controller1: wpilib.XboxController
+    # controller2: wpilib.XboxController
 
     def robotInit(self):
-        self.drivetrain = Drivetrain()
-        self.controller1 = wpilib.XboxController(0)
-        self.controller2 = wpilib.XboxController(1)
         self.time = wpilib.Timer()
+        self.drivetrain = Drivetrain()
+        self.controllerStick = wpilib.Joystick(0)
+        # self.controller1 = wpilib.XboxController(0)
+        # self.controller2 = wpilib.XboxController(1)
         # wpilib.CameraServer.launch("limelight.py:launch")
 
     def autonomousInit(self):
@@ -58,7 +60,8 @@ class Robot(wpilib.TimedRobot):
         self.time.start()
 
     def teleopPeriodic(self):
-        self.drivetrain.drive(self.controller1.getLeftY(), self.controller1.getLeftX())
+        self.drivetrain.drive(self.controllerStick.getZ(), self.controllerStick.getX())
+        # self.drivetrain.drive(self.controller1.getLeftY(), self.controller1.getLeftX())
 
     def teleopExit(self):
         self.time.stop()
