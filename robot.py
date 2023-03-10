@@ -60,7 +60,7 @@ class Robot(wpilib.TimedRobot):
         self.time.start()
 
     def teleopPeriodic(self):
-        self.drivetrain.drive(self.controllerStick.getZ(), self.controllerStick.getX())
+        self.drivetrain.drive(-self.controllerStick.getY(), self.controllerStick.getX())
         # self.drivetrain.drive(self.controller1.getLeftY(), self.controller1.getLeftX())
 
     def teleopExit(self):
