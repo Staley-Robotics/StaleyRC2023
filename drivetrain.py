@@ -1,0 +1,25 @@
+import ctre
+from wpilib import MotorControllerGroup
+
+
+class Drivetrain:
+
+    EASE_VALUE = 0.0175
+    last_speed = 0
+    last_rotation = 0
+
+    def __init__(self):
+        self.left = MotorControllerGroup(ctre.WPI_VictorSPX(1), ctre.WPI_VictorSPX(2))
+        self.right = MotorControllerGroup(ctre.WPI_VictorSPX(3), ctre.WPI_VictorSPX(4))
+
+    def drive(self, speed: float, rotation: float):
+        speed *= 0.7
+        if speed > self.last_speed + self.EASE_VALUE and self.last_speed < speed:
+            speed = self.last_speed + self.EASE_VALUE
+        if speed < self.last_speed - self.EASE_VALUE and self.last_speed > speed:
+            speed = self.last_speed - self.EASE_VALUE
+        self.last_speed = speed
+        rotation *= 0.3
+
+        self.left.set(rotation - speed)
+        self.right.set(rotation + speed)
