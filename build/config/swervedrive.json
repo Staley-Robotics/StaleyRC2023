@@ -1,0 +1,72 @@
+{
+    "SwerveDrive4": {
+        "gyroId": 61,
+        "gyroCanbus": "rio"
+    },
+    "SwerveModule": {
+        "FrontLeft": {
+            "driveMotorId": 7,
+            "driveMotorCanbus": "canivore1",
+            "driveMotorReversed": true,
+            "driveMotorPhase": false,
+            "angleMotorId": 8,
+            "angleMotorCanbus": "canivore1",
+            "angleMotorReversed": true,
+            "angleMotorPhase": true,
+            "angleSensorId": 18,
+            "angleSensorCanbus": "canivore1",
+            "angleSensorOffset": -137.549,
+            "angleSensorReversed": false,
+            "modulePositionX": 0.25,
+            "modulePositionY": 0.25
+        },
+        "FrontRight": {
+            "driveMotorId": 5,
+            "driveMotorCanbus": "canivore1",
+            "driveMotorReversed": true,
+            "driveMotorPhase": false,
+            "angleMotorId": 6,
+            "angleMotorCanbus": "canivore1",
+            "angleMotorReversed": true,
+            "angleMotorPhase": true,
+            "angleSensorId": 16,
+            "angleSensorCanbus": "canivore1",
+            "angleSensorOffset": 35.684,
+            "angleSensorReversed": false,
+            "modulePositionX": 0.25,
+            "modulePositionY": -0.25
+        },
+        "BackLeft": {
+            "driveMotorId": 3,
+            "driveMotorCanbus": "canivore1",
+            "driveMotorReversed": true,
+            "driveMotorPhase": false,
+            "angleMotorId": 4,
+            "angleMotorCanbus": "canivore1",
+            "angleMotorReversed": true,
+            "angleMotorPhase": true,
+            "angleSensorId": 14,
+            "angleSensorCanbus": "canivore1",
+            "angleSensorReversed": false,
+            "angleSensorOffset": -136.055,
+            "modulePositionX": -0.25,
+            "modulePositionY": 0.25
+        },
+        "BackRight": {
+            "driveMotorId": 1,
+            "driveMotorCanbus": "canivore1",
+            "driveMotorReversed": true,
+            "driveMotorPhase": false,
+            "angleMotorId": 2,
+            "angleMotorCanbus": "canivore1",
+            "angleMotorReversed": true,
+            "angleMotorPhase": true,
+            "angleSensorId": 12,
+            "angleSensorCanbus": "canivore1",
+            "angleSensorOffset": 65.654,
+            "angleSensorReversed": false,
+            "modulePositionX": -0.25,
+            "modulePositionY": -0.25
+        }
+    }
+}

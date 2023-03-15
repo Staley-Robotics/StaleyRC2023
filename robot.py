@@ -1,80 +1,134 @@
-from wpilib import *
+import time
+from wpilib import * # TimedRobot, run
+from ntcore import NetworkTableInstance, Event, EventFlags
 
-from appendage.arm import Arm
-from appendage.claw import Claw
-from autonomous.step import Step
-from drivetrain.chassis import Chassis
-from optics.limelight import Limelight
-from tools import PipelineManager, Mode
-from autonomous.process import Process
+from build import Build
+
+from subsystems import Subsystems
+from subsystems.auto import Auto
+from subsystems.swervedrive import SwerveDrive4
+#from subsystems.pneumatics import RobotCompressor
+from subsystems.arm import Arm
+from subsystems.claw import Claw
+#from subsystems.bumper import Bumper
+#from subsystems.limelight import Limelight
 
 
 class Robot(TimedRobot):
-    # TODO: Merge and incorporate other classes
-    time: Timer
-    pilot: XboxController
-    other: XboxController
-    pipeline: PipelineManager
-    drivetrain: Chassis
-    limelight: Limelight
-    arm: Arm
-    claw: Claw
-    auto_steps: list[Step]
-    step_index: int
-    process: Process
+    def robotInit(self): 
+        # Initialization Wait for Canbus (Known Issue)
+        time.sleep(2)
 
-    def robotInit(self) -> None:
-        self.time = Timer()
-        self.pilot = XboxController(0)
-        self.other = XboxController(1)
-        self.pipeline = PipelineManager(self.pilot, self.other)
-        # self.drivetrain = Swerve(self.pipeline)
-        self.limelight = Limelight()
-        self.arm = Arm(self.pipeline)
-        self.claw = Claw(self.pipeline)
-        self.process = Process([
-            Step(
-                self.drivetrain.goto, 0, 12
-            )
-        ])
+        # Get Build Settings
+        Build().buildInitConfig()
+        Build().buildVariables()
 
-    def robotPeriodic(self) -> None:
-        self.drivetrain.updatePosition()
+        # Connect to NetworkTables
+        self.ntInst = NetworkTableInstance.getDefault()
 
-    def teleopInit(self) -> None:
-        self.time.reset()
-        self.time.start()
-        self.pipeline.set_mode(Mode.TELEOP)
-        self.claw.compressor.enableDigital()
+        pdm = PowerDistribution(0, PowerDistribution.ModuleType.kCTRE)
+        pdm.clearStickyFaults()
+        # Build Subsystems
+        self.subsystems = []
 
-    def teleopPeriodic(self) -> None:
-        self.drivetrain.drive()
-        self.arm.run_checks()
-        self.claw.run_checks()
+        # Add SwerveDrive to Subsystems
+        try:
+            self.subsystems.append( SwerveDrive4() )
+        except Exception as e:
+            print( e )
+            pass
 
-    def teleopExit(self) -> None:
-        self.time.stop()
-    def autonomousInit(self) -> None:
-        self.time.reset()
-        self.time.start()
-        self.pipeline.set_mode(Mode.AUTO)
-        self.process.begin()
+        # Add RobotCompressor to Subsystems
+        #try:
+        #    self.subsystems.append( RobotCompressor() )
+        #except:
+        #    pass
 
-    def autonomousPeriodic(self) -> None:
-        # if self.auto_steps[self.step_index].callback():
-        #     self.step_index += 1
-        self.process.update()
+        # Add Arm to Subsystems
+        try:
+            self.subsystems.append( Arm() )
+        except:
+            pass
 
-    def autonomousExit(self) -> None:
-        self.time.stop()
+        # Add Claw to Subsystems
+        try:
+            self.subsystems.append( Claw() )
+        except:
+            pass
 
-    def testInit(self) -> None:
-        self.pipeline.set_mode(Mode.TELEOP)
-        self.drivetrain = Swerve(self.pipeline)
+        # Add Bumper to Subsystems
+        #try:
+        #    self.subsystems.append( Bumper() )
+        #except:
+        #    pass
 
-    def testPeriodic(self) -> None:
-        self.drivetrain.drive()
+        # Add Limelight to Subsystems
+        #try:
+        #    self.subsystems.append( Limelight() )
+        #except:
+        #    pass
+
+    def robotPeriodic(self):
+        #print(
+        #    self.subsystems[0].moduleFR.angleMotor.getSelectedSensorPosition(),
+        #    self.subsystems[0].moduleFR.angleSensor.getAbsolutePosition(),
+        #    self.subsystems[0].moduleFR.angleSensor.getPosition()
+        #)
+        pass
+
+    def autonomousInit(self):
+        self.auto = Auto(self.subsystems[0], self.subsystems[1], self.subsystems[2])
+    def autonomousPeriodic(self):
+        self.auto.run()
+    def autonomousExit(self): pass
+ 
+    def teleopInit(self):
+        for i in range(len(self.subsystems)):
+            s: Subsystems = self.subsystems[i]
+            s.runInit()
+
+    def teleopPeriodic(self):
+        for i in range(len(self.subsystems)):
+            s:Subsystems = self.subsystems[i]
+            s.run()
+    def teleopExit(self): pass
+
+    def testInit(self):
+        # Load NT Table for Testing
+        ntTest = self.ntInst.getTable("Testing" )
+        ntTestVars = ntTest.getTopics()
+        for i in range(len(ntTestVars)):
+            vName = ntTestVars[i].getName().removeprefix("/Testing/") 
+            vValue = ntTest.getBoolean( vName, False )
+            exec(f"self.test_{vName} = {vValue}")
+        self._ntListener = self.ntInst.addListener(
+            [ "/Testing" ],
+            EventFlags.kValueAll,
+            self.updateNtTestValues
+        )
+    def testPeriodic(self):
+        for i in range(len(self.subsystems)):
+            try:
+                s:Subsystems = self.subsystems[i]
+                sName = s.__class__.__name__
+                runInTest = eval( f"self.test_{sName}" )
+                if runInTest: s.run()
+            except:
+                pass
+    def testExit(self):
+        self.ntInst.removeListener(self._ntListener)
+
+    def disabledInit(self): pass
+    def disabledPeriodic(self): pass
+    def disabledExit(self): pass
+
+    def updateNtTestValues(self, event:Event):
+        # Get Variable Name and New Value
+        varName = event.data.topic.getName().removeprefix(f"/Testing/")
+        newValue = event.data.value.value()
+        # Set Variable
+        exec( f"self.test_{varName} = {newValue}" )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run(Robot)

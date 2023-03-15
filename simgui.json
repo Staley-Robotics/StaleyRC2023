@@ -1,46 +1,9 @@
 {
   "HALProvider": {
     "Other Devices": {
-      "Talon FX[1]": {
+      "Talon FX[6]/Integrated Sensor": {
         "header": {
           "open": true
-        }
-      },
-      "Talon FX[2]": {
-        "header": {
-          "open": true
-        }
-      },
-      "Talon FX[3]": {
-        "header": {
-          "open": true
-        }
-      },
-      "Talon FX[4]": {
-        "header": {
-          "open": true
-        }
-      },
-      "Talon FX[5]": {
-        "header": {
-          "open": true
-        }
-      },
-      "Talon FX[7]": {
-        "header": {
-          "open": true
-        }
-      },
-      "Talon FX[8]": {
-        "header": {
-          "open": true
-        }
-      }
-    },
-    "PowerDistributions": {
-      "0": {
-        "PowerDistribution[0]": {
-          "open": false
         }
       }
     }
@@ -48,6 +11,8 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/LiveWindow/Ungrouped/Pigeon 2[61]": "Gyro",
+      "/LiveWindow/Ungrouped/Pigeon 2[9]": "Gyro",
       "/LiveWindow/Ungrouped/Talon FX [1]": "Motor Controller",
       "/LiveWindow/Ungrouped/Talon FX [2]": "Motor Controller",
       "/LiveWindow/Ungrouped/Talon FX [3]": "Motor Controller",
@@ -55,56 +20,50 @@
       "/LiveWindow/Ungrouped/Talon FX [5]": "Motor Controller",
       "/LiveWindow/Ungrouped/Talon FX [6]": "Motor Controller",
       "/LiveWindow/Ungrouped/Talon FX [7]": "Motor Controller",
-      "/LiveWindow/Ungrouped/Talon FX [8]": "Motor Controller"
-    }
-  },
-  "NetworkTables": {
-    "transitory": {
-      "LiveWindow": {
-        ".status": {
-          "open": false
+      "/LiveWindow/Ungrouped/Talon FX [8]": "Motor Controller",
+      "/SmartDashboard/Field": "Field2d"
+    },
+    "windows": {
+      "/SmartDashboard/Field": {
+        "window": {
+          "visible": true
         }
-      },
-      "control": {
-        "open": false
-      },
-      "controller": {
-        "open": true
-      },
-      "datatable": {
-        "open": false
-      },
-      "drivetrain": {
-        "control": {
-          "open": false
-        },
-        "modules": {
-          "left": {
-            "open": false
-          },
-          "right": {
-            "open": false
-          }
-        },
-        "open": false
-      },
-      "modules": {
-        "open": false
       }
     }
   },
-  "NetworkTables Info": {
-    "Connections": {
-      "open": true
+  "NetworkTables": {
+    "Retained Values": {
+      "open": false
     },
-    "Server": {
-      "Publishers": {
+    "persistent": {
+      ".Testing": {
         "open": true
       },
-      "Subscribers": {
+      "Build": {
         "open": true
       },
-      "open": true
+      "InitConfig": {
+        "SwerveDrive4": {
+          "open": true
+        }
+      },
+      "Testing": {
+        "open": true
+      }
+    },
+    "transitory": {
+      "Variables": {
+        "SwerveDrive4": {
+          "open": true,
+          "speed": {
+            "linear": {
+              "open": true
+            },
+            "open": true
+          }
+        },
+        "open": true
+      }
     }
   }
 }

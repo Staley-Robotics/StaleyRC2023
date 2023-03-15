@@ -10,7 +10,7 @@
   {
     "name": "/Variables/SwerveModule/angleMotors/pidFf/kP",
     "type": "double",
-    "value": 0.5,
+    "value": 0.05,
     "properties": {
       "persistent": true
     }
@@ -18,7 +18,7 @@
   {
     "name": "/Build/initOverride",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -26,7 +26,7 @@
   {
     "name": "/Build/variableOverride",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -66,7 +66,7 @@
   {
     "name": "/InitConfig/SwerveDrive4/gyroId",
     "type": "double",
-    "value": 61.0,
+    "value": 9.0,
     "properties": {
       "persistent": true
     }
@@ -98,7 +98,7 @@
   {
     "name": "/InitConfig/SwerveModule/FrontLeft/driveMotorReversed",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -210,7 +210,7 @@
   {
     "name": "/InitConfig/SwerveModule/FrontRight/driveMotorReversed",
     "type": "boolean",
-    "value": false,
+    "value": true,
     "properties": {
       "persistent": true
     }
@@ -490,7 +490,7 @@
   {
     "name": "/Variables/SwerveDrive4/speed/angular/maxVelocity",
     "type": "double",
-    "value": 25.13274122,
+    "value": 6.28318531,
     "properties": {
       "persistent": true
     }
@@ -498,7 +498,7 @@
   {
     "name": "/Variables/SwerveDrive4/speed/angular/maxAcceleration",
     "type": "double",
-    "value": 12.56637061,
+    "value": 3.14159265,
     "properties": {
       "persistent": true
     }
@@ -730,7 +730,7 @@
   {
     "name": "/Variables/SwerveModule/driveMotors/pidFf/kP",
     "type": "double",
-    "value": 0.15,
+    "value": 1.0,
     "properties": {
       "persistent": true
     }
@@ -754,7 +754,7 @@
   {
     "name": "/Variables/SwerveModule/driveMotors/pidFf/kF",
     "type": "double",
-    "value": 0.065,
+    "value": 0.0,
     "properties": {
       "persistent": true
     }
@@ -915,14 +915,6 @@
     "name": "/Variables/SwerveModule/angleMotors/pidFf/tolerance",
     "type": "double",
     "value": 0.0,
-    "properties": {
-      "persistent": true
-    }
-  },
-  {
-    "name": "/Variables/SwerveModule/driveMotors/slewRateSteps",
-    "type": "double",
-    "value": 5.0,
     "properties": {
       "persistent": true
     }

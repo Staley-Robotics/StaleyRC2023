@@ -1,0 +1,6 @@
+{
+    "Controllers": {
+        "deadbandDefault": 0.1,
+        "slewRateStepsDefault": 3
+    }
+}
