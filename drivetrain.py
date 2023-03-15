@@ -1,5 +1,4 @@
 import ctre
-import math
 from wpilib import MotorControllerGroup
 
 
@@ -11,7 +10,7 @@ class Drivetrain:
     def __init__(self):
         self.left = MotorControllerGroup(ctre.WPI_VictorSPX(1), ctre.WPI_VictorSPX(2))
         self.right = MotorControllerGroup(ctre.WPI_VictorSPX(3), ctre.WPI_VictorSPX(4))
-        self.mod = 0
+        # self.mod = 0
 
     def drive(self, speed: float, rotation: float, variableSpeed: float):
         # if abs(variableSpeed - 1) > 1:
@@ -20,17 +19,15 @@ class Drivetrain:
         #     self.mod = self.mod
         # speed *= self.mod
 
-        speed *= 0.9
+        speed *= 0.7
+
         if speed > self.last_speed + self.EASE_VALUE and self.last_speed < speed:
             speed = self.last_speed + self.EASE_VALUE
         if speed < self.last_speed - self.EASE_VALUE and self.last_speed > speed:
             speed = self.last_speed - self.EASE_VALUE
         self.last_speed = speed
 
-        rotation *= 2 * math.pi * speed
-
-        # chassis speed
-        # drivetrain class
+        rotation *= 0.4
 
         self.left.set(rotation - speed)
         self.right.set(rotation + speed)
