@@ -7,9 +7,9 @@ class Limelight:
 
     def __init__(self):
 
-        table.putNumber('ledMode', 0)
-        table.putNumber('camMode', 1)
-        table.putNumber('stream', 2)
+        table.setDefaultNumber('ledMode', 0)
+        table.putNumber('camMode', 0)
+        table.putNumber('stream', 0)
         table.putNumber('pipeline', 0)
 
     def look(self):
@@ -20,3 +20,8 @@ class Limelight:
         # ts = table.getNumber('ts', None)
 
         # print(f"targets = {tx}", f"offset = {ty}")
+
+        tid = table.getNumber('tid', None)
+
+        if tid > 0:
+            print(f"the id = {tid}")
