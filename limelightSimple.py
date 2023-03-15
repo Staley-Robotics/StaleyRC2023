@@ -23,5 +23,5 @@ class Limelight:
 
         tid = table.getNumber('tid', None)
 
-        if tid > 0:
+        if tid != -1:
             print(f"the id = {tid}")

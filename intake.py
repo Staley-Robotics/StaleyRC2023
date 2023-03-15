@@ -11,10 +11,10 @@ class Intake:
     def go(self):
 
         if self.joystick.getRawButton(2):
-            self.motor.set(0.4)
+            self.motor.set(0.45)
 
         elif self.joystick.getRawButton(3):
-            self.motor.set(-0.5)
+            self.motor.set(-0.45)
 
         else:
             self.motor.set(0)

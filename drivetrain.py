@@ -19,7 +19,7 @@ class Drivetrain:
         #     self.mod = self.mod
         # speed *= self.mod
 
-        speed *= 0.7
+        speed *= 0.8
 
         if speed > self.last_speed + self.EASE_VALUE and self.last_speed < speed:
             speed = self.last_speed + self.EASE_VALUE
