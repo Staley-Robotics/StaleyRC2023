@@ -172,6 +172,13 @@ class SwerveDrive4(Subsystems):
 
         return slx, sly, lt, rx, ry, rt
 
+    def balance(self):
+        print(math.ceil((self.gyro.getYaw() / 180) % 1))
+        print((self.gyro.getPitch() * self.gyro.getRoll()) / 129600)
+        offset = self.gyro.getPitch() * self.gyro.getRoll() * math.ceil((self.gyro.getYaw() / 180) % 1) / 129600
+        self.drive(offset, 0, 0)
+        return abs(offset) < 0.05
+
     def driveToPose(self, pose:Pose2d, velocity:float=None):
     #    if velocity is None:
     #        velocity = self.linear_maxvelocity

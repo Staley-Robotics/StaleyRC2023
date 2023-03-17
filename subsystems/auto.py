@@ -64,7 +64,9 @@ class Auto(Subsystems):
             self.timer.reset()
             self.timer.start()
             self.is_new_step = False
-        self.swerve.drive(self.gyro.getPitch() / 360, 0, 0)
+        yaw = (self.gyro.getYaw() / 180 - 1)
+        yaw -= abs(2 * yaw - 2) - 1
+        self.swerve.drive((self.gyro.getPitch() / 360) * yaw, 0, 0)
         return abs(self.gyro.getPitch()) < 5
 
     def arm_pivot(self, goal):
