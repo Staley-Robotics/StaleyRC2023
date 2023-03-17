@@ -6,8 +6,8 @@ from build import Build
 
 from subsystems import Subsystems
 from subsystems.auto import Auto
+from subsystems.pneumatics import Pneumatics
 from subsystems.swervedrive import SwerveDrive4
-#from subsystems.pneumatics import RobotCompressor
 from subsystems.arm import Arm
 from subsystems.claw import Claw
 #from subsystems.bumper import Bumper
@@ -15,6 +15,14 @@ from subsystems.claw import Claw
 
 
 class Robot(TimedRobot):
+
+    ntInst: NetworkTableInstance
+    subsystems: list[Subsystems]
+    swerve: SwerveDrive4
+    arm: Arm
+    pneumatics_system: Pneumatics
+    claw: Claw
+
     def robotInit(self): 
         # Initialization Wait for Canbus (Known Issue)
         time.sleep(2)
@@ -30,45 +38,21 @@ class Robot(TimedRobot):
         pdm.clearStickyFaults()
         # Build Subsystems
         self.subsystems = []
-
-        # Add SwerveDrive to Subsystems
         try:
-            self.subsystems.append( SwerveDrive4() )
-        except Exception as e:
-            print( e )
-            pass
-
-        # Add RobotCompressor to Subsystems
-        #try:
-        #    self.subsystems.append( RobotCompressor() )
-        #except:
-        #    pass
-
-        # Add Arm to Subsystems
-        try:
-            self.subsystems.append( Arm() )
+            self.swerve = SwerveDrive4()
         except:
             pass
+        self.arm = Arm()
+        self.pneumatics_system = Pneumatics()
+        self.claw = Claw(self.pneumatics_system)
+        self.subsystems.append(self.swerve)
+        self.subsystems.append(self.arm)
+        self.subsystems.append(self.claw)
 
-        # Add Claw to Subsystems
-        try:
-            self.subsystems.append( Claw() )
-        except:
-            pass
-
-        # Add Bumper to Subsystems
-        #try:
-        #    self.subsystems.append( Bumper() )
-        #except:
-        #    pass
-
-        # Add Limelight to Subsystems
-        #try:
-        #    self.subsystems.append( Limelight() )
-        #except:
-        #    pass
+        self.pneumatics_system.runInit()
 
     def robotPeriodic(self):
+        self.pneumatics_system.run()
         #print(
         #    self.subsystems[0].moduleFR.angleMotor.getSelectedSensorPosition(),
         #    self.subsystems[0].moduleFR.angleSensor.getAbsolutePosition(),

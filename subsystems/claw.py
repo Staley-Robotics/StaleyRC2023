@@ -2,24 +2,28 @@ from . import Subsystems
 
 from wpilib import *
 
+from .pneumatics import Pneumatics
+
 
 class Claw(Subsystems):
-    module: PneumaticsControlModule
-    compressor: Compressor
     solenoid: DoubleSolenoid
     op2: XboxController
     clawOpen: bool = False
+    pneumatics: Pneumatics
+
+    def __init__(self, pneumatics: Pneumatics):
+        super().__init__()
+        self.pneumatics = pneumatics
+
 
     def initVariables(self):
         self.op2 = XboxController(1)
-        self.module = PneumaticsControlModule(0)
-        self.module.clearAllStickyFaults()
         # self.solenoid = self.module.makeDoubleSolenoid(4, 0)
         self.solenoid = DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 4, 7) #self.module.makeDoubleSolenoid(4, 0)
         #self.solenoid.set(DoubleSolenoid.Value.kForward)
 
-        self.compressor = self.module.makeCompressor()
-        self.compressor.disable()
+        self.pneumatics = self.pneumatics.module.makeCompressor()
+        self.pneumatics.compressor.disable()
 
     def getInputs(self) -> bool:
         grip = self.op2.getAButtonPressed()
@@ -29,11 +33,6 @@ class Claw(Subsystems):
         self.solenoid.set( DoubleSolenoid.Value.kForward )
 
     def run(self):
-        # print(self.compressor.getPressureSwitchValue())
-        if self.compressor.isEnabled() and self.compressor.getPressureSwitchValue():
-            self.compressor.disable()
-        if not self.compressor.isEnabled() and not self.compressor.getPressureSwitchValue():
-            self.compressor.enableDigital()
         self.toggle(self.getInputs())
 
     def toggle(self, toggle_value: bool):
