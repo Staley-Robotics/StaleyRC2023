@@ -41,7 +41,7 @@ class Arm(Subsystems):
     degrees_to_ticks = integrated_encoder/360 * pivot_ratio
     pivot_bay: float = 10 * degrees_to_ticks
     pivot_low: float = 20.0 * degrees_to_ticks
-    pivot_mid: float = 75.0 * degrees_to_ticks
+    pivot_mid: float = 85.0 * degrees_to_ticks
     pivot_top: float = 60.0 * degrees_to_ticks
 
     arm_r = WPI_TalonFX(9, "rio")
@@ -120,17 +120,34 @@ class Arm(Subsystems):
         return pivot_axis, pivot_negative_axis, shaft_axis, point_1, point_2, point_3, point_4
 
     def run(self):
-        self.extend_stickler(self.getInputs()[2])
-        self.rotate_stickler(self.getInputs()[0], self.getInputs()[1])
+        inputs = self.getInputs()
+        self.extend_stickler(inputs[2])
+        self.rotate_stickler(
+            inputs[0],
+            inputs[1],
+            inputs[3],
+            inputs[4],
+            inputs[5],
+            inputs[6]
+        )
         # self.extend()
 
-    def rotate_stickler(self, up, down):
+    def rotate_stickler(self, up, down, a, b, x, y):
+        if x:
+            self.pivot_atm = self.pivot_mid - (6.5 * self.degrees_to_ticks)
+        if y:
+            self.pivot_atm = self.pivot_mid + (10.0 * self.degrees_to_ticks)
+            #pivot_bay: float = 10 * degrees_to_ticks
+            #pivot_low: float = 20.0 * degrees_to_ticks
+            #pivot_mid: float = 85.0 * degrees_to_ticks
+            #pivot_top: float = 60.0 * degrees_to_ticks
+
         self.pivot_atm += up * 1.0 * self.degrees_to_ticks
         self.pivot_atm -= down * 1.0 * self.degrees_to_ticks
         self.arm_r.set(ControlMode.Position, self.pivot_atm)
 
     def extend_stickler(self, goal):
-        pass
+        return
         current = self.target_pos #self.arm_e.getSelectedSensorPosition()
         toChange = goal * -410 #-48 * self.inch_to_ticks
         target = current + toChange

@@ -9,7 +9,7 @@ from subsystems.swervedrive import SwerveDrive4
 class Auto:
 
     timer: wpilib.Timer
-    steps: tuple[list[callable], list[callable], list[callable]]
+    steps: tuple[list[callable], list[callable], list[callable], list[callable]]
     mode: int = 1
     index: int = 0
     is_new_step: bool = True
@@ -21,19 +21,61 @@ class Auto:
         self.timer = wpilib.Timer()
         self.steps = (
             [
-                lambda: self.drive(0.75, 0.0, 0.0, 0.0, 0.0, 2.0)
+                lambda: self.drive(-0.75, 0.0, 0.0, 0.0, 0.0, 2.0)
             ],
             [
                 lambda: self.arm_pivot(2),
-                lambda: self.pause(2.0),
+                lambda: self.drive(-0.25, 0.0, 0.0, 0.0, 0.0, 0.50),
+                lambda: self.pause(0.5),
+                lambda: self.drive(0.0, 0.0, 0.0, 0.0, 0.0, 0.10),
+                lambda: self.pause(1.0),
                 lambda: self.claw_toggle(),
-                lambda: self.pause(3.0),
-                lambda: self.claw_toggle(),
                 lambda: self.pause(2.0),
-                lambda: self.arm_pivot(0)
+                lambda: self.drive(0.25, 0.0, 0.0, 0.0, 0.0, 0.25),
+                lambda: self.pause(0.25),
+                lambda: self.claw_toggle(),
+                lambda: self.pause(1.0),
+                lambda: self.arm_pivot(0),
+                lambda: self.pause(1.0),
+                lambda: self.drive(0.9, 0.0, 0.0, 0.0, 0.0, 1.5),
+                lambda: self.drive(0.5, 0.0, 0.0, 0.0, 0.0, 1.25),
+                lambda: self.drive(0.0, 0.0, 0.0, 0.0, 0.0, 10.0)
             ],
             [
-
+                lambda: self.arm_pivot(2),
+                lambda: self.drive(-0.25, 0.0, 0.0, 0.0, 0.0, 0.50),
+                lambda: self.pause(0.5),
+                lambda: self.drive(0.0, 0.0, 0.0, 0.0, 0.0, 0.10),
+                lambda: self.pause(1.0),
+                lambda: self.claw_toggle(),
+                lambda: self.pause(2.0),
+                lambda: self.drive(0.25, 0.25, 0.0, 0.0, 0.0, 0.50),
+                lambda: self.pause(0.50),
+                lambda: self.drive(0.0, 0.0, 0.0, 0.0, 0.0, 0.04),
+                lambda: self.claw_toggle(),
+                lambda: self.pause(1.0),
+                lambda: self.arm_pivot(0),
+                lambda: self.pause(1.0),
+                lambda: self.drive(0.9, 0.0, 0.0, 0.0, 0.0, 3.5),
+                lambda: self.drive(0.0, 0.0, 0.0, 0.0, 0.0, 10.0)
+            ],
+            [
+                lambda: self.arm_pivot(2),
+                lambda: self.drive(-0.25, 0.0, 0.0, 0.0, 0.0, 0.50),
+                lambda: self.pause(0.5),
+                lambda: self.drive(0.0, 0.0, 0.0, 0.0, 0.0, 0.10),
+                lambda: self.pause(1.0),
+                lambda: self.claw_toggle(),
+                lambda: self.pause(2.0),
+                lambda: self.drive(0.25, -0.25, 0.0, 0.0, 0.0, 0.50),
+                lambda: self.pause(0.50),
+                lambda: self.drive(0.0, 0.0, 0.0, 0.0, 0.0, 0.04),
+                lambda: self.claw_toggle(),
+                lambda: self.pause(1.0),
+                lambda: self.arm_pivot(0),
+                lambda: self.pause(1.0),
+                lambda: self.drive(0.9, 0.0, 0.0, 0.0, 0.0, 3.5),
+                lambda: self.drive(0.0, 0.0, 0.0, 0.0, 0.0, 10.0)
             ]
         )
 
