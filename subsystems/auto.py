@@ -1,12 +1,13 @@
-from subsystems import Subsystems
 import wpilib
+from ctre import WPI_Pigeon2
 
+from . import Subsystems
 from subsystems.arm import Arm
 from subsystems.claw import Claw
 from subsystems.swervedrive import SwerveDrive4
 
 
-class Auto:
+class Auto(Subsystems):
 
     timer: wpilib.Timer
     steps: tuple[list[callable], list[callable], list[callable]]
@@ -15,6 +16,7 @@ class Auto:
     is_new_step: bool = True
 
     def __init__(self, swerve: SwerveDrive4, arm: Arm, claw: Claw):
+        super().__init__()
         self.swerve = swerve
         self.arm = arm
         self.claw = claw
@@ -37,6 +39,11 @@ class Auto:
             ]
         )
 
+    def initVariables(self):
+        gyroId: int = int(self.ntCfgs.getNumber("gyroId", 61))
+        gyroCanbus: str = self.ntCfgs.getString("gyroCanbus", "rio")
+        self.gyro = WPI_Pigeon2(gyroId, gyroCanbus)
+
     def pause(self, delay):
         if self.is_new_step:
             self.timer.reset()
@@ -51,6 +58,15 @@ class Auto:
             self.is_new_step = False
         self.claw.toggle(True)
         return True
+
+    def balance(self):
+        if self.is_new_step:
+            self.timer.reset()
+            self.timer.start()
+            self.is_new_step = False
+        self.swerve.drive(self.gyro.getPitch() / 360, 0, 0)
+        return abs(self.gyro.getPitch()) < 5
+
     def arm_pivot(self, goal):
         if self.is_new_step:
             self.timer.reset()
