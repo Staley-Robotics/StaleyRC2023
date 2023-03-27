@@ -19,11 +19,8 @@ class Claw(Subsystems):
     def initVariables(self):
         self.op2 = XboxController(1)
         # self.solenoid = self.module.makeDoubleSolenoid(4, 0)
-        self.solenoid = DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 4, 7) #self.module.makeDoubleSolenoid(4, 0)
+        self.solenoid = DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 3, 5) #self.module.makeDoubleSolenoid(4, 0)
         #self.solenoid.set(DoubleSolenoid.Value.kForward)
-
-        self.pneumatics = self.pneumatics.module.makeCompressor()
-        self.pneumatics.compressor.disable()
 
     def getInputs(self) -> bool:
         grip = self.op2.getAButtonPressed()

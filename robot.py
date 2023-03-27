@@ -6,8 +6,8 @@ from build import Build
 
 from subsystems import Subsystems
 from subsystems.auto import Auto
-from subsystems.pneumatics import Pneumatics
 from subsystems.swervedrive import SwerveDrive4
+from subsystems.pneumatics import Pneumatics
 from subsystems.arm import Arm
 from subsystems.claw import Claw
 #from subsystems.bumper import Bumper
@@ -15,7 +15,6 @@ from subsystems.claw import Claw
 
 
 class Robot(TimedRobot):
-
     ntInst: NetworkTableInstance
     subsystems: list[Subsystems]
     swerve: SwerveDrive4
@@ -23,7 +22,7 @@ class Robot(TimedRobot):
     pneumatics_system: Pneumatics
     claw: Claw
 
-    def robotInit(self): 
+    def robotInit(self):
         # Initialization Wait for Canbus (Known Issue)
         time.sleep(2)
 
@@ -33,6 +32,7 @@ class Robot(TimedRobot):
 
         # Connect to NetworkTables
         self.ntInst = NetworkTableInstance.getDefault()
+        self.ntTbl = self.ntInst.getTable("Startup")
 
         pdm = PowerDistribution(0, PowerDistribution.ModuleType.kCTRE)
         pdm.clearStickyFaults()
@@ -49,23 +49,50 @@ class Robot(TimedRobot):
         self.subsystems.append(self.arm)
         self.subsystems.append(self.claw)
 
-        self.pneumatics_system.runInit()
+        time.sleep(1)
+        self.ntTbl.putBoolean("leftS", False)
+        self.ntTbl.setPersistent("leftS")
+        self.ntTbl.putBoolean("centerS", False)
+        self.ntTbl.setPersistent("centerS")
+        self.ntTbl.putBoolean("rightS", False)
+        self.ntTbl.setPersistent("rightS")
 
     def robotPeriodic(self):
-        self.pneumatics_system.run()
         #print(
         #    self.subsystems[0].moduleFR.angleMotor.getSelectedSensorPosition(),
         #    self.subsystems[0].moduleFR.angleSensor.getAbsolutePosition(),
         #    self.subsystems[0].moduleFR.angleSensor.getPosition()
         #)
-        pass
+        self.pneumatics_system.run()
 
     def autonomousInit(self):
         self.auto = Auto(self.subsystems[0], self.subsystems[1], self.subsystems[2])
+        if self.ntTbl.getBoolean("centerS", False):
+            self.auto.mode = 1
+        elif self.ntTbl.getBoolean("leftS", False):
+            self.auto.mode = 3
+        elif self.ntTbl.getBoolean("rightS", False):
+            self.auto.mode = 2
+        else:
+            self.auto.mode = 0
+
+        self.auto.index = 0
+        self.resetSpeeds = [
+            self.subsystems[0].speed_linear_maxvelocity,
+            self.subsystems[0].speed_linear_maxvelocityx,
+            self.subsystems[0].speed_linear_maxvelocityy
+        ]
+        self.subsystems[0].speed_linear_maxvelocity = 8
+        self.subsystems[0].speed_linear_maxvelocityx = 8
+        self.subsystems[0].speed_linear_maxvelocityy = 8
     def autonomousPeriodic(self):
         self.auto.run()
-    def autonomousExit(self): pass
- 
+    def autonomousExit(self):
+        self.subsystems[0].speed_linear_maxvelocity = self.resetSpeeds[0]
+        self.subsystems[0].speed_linear_maxvelocityx = self.resetSpeeds[1]
+        self.subsystems[0].speed_linear_maxvelocityy = self.resetSpeeds[2]
+
+
     def teleopInit(self):
         for i in range(len(self.subsystems)):
             s: Subsystems = self.subsystems[i]

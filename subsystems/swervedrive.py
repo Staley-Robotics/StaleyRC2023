@@ -18,11 +18,13 @@ class SwerveDrive4(Subsystems):
     halfSpeed = False
 
     def initSubsystem(self):
+        SmartDashboard.putBoolean("halfSpeed", self.halfSpeed)
+
         # Gyro
         gyroId:int = int(self.ntCfgs.getNumber("gyroId", 61))
         gyroCanbus:str = self.ntCfgs.getString("gyroCanbus", "rio")
         self.gyro = WPI_Pigeon2(gyroId, gyroCanbus)
-        self.gyro.setYaw(0)
+        self.gyro.setYaw(180)
         
         # SwerveModules
         self.moduleFL = SwerveModule(subComponent="FrontLeft")
@@ -147,7 +149,9 @@ class SwerveDrive4(Subsystems):
         lx, ly, lt, rx, ry, rt = self.getInputs()
         
         # Drive
-        if rx != 0.0 or ry != 0.0:
+        if self.op1.getBButton():
+            self.balance()
+        elif rx != 0.0 or ry != 0.0:
             self.driveWithRotate( lx, ly, rx, ry )
         else:
             omega = (rt - lt)
@@ -159,18 +163,35 @@ class SwerveDrive4(Subsystems):
         ly = applyDeadband(self.op1.getLeftX(), 0.1, 1.0)
         sly = self.sly.calculate(ly)
         lt = applyDeadband(self.op1.getLeftTriggerAxis(), 0.1, 1.0)
-        rx = applyDeadband(self.op1.getRightY(), 0.1, 1.0)
-        ry = applyDeadband(self.op1.getRightX(), 0.1, 1.0)
+        rx = 0.0 #applyDeadband(self.op1.getRightY(), 0.1, 1.0)
+        ry = 0.0 #applyDeadband(self.op1.getRightX(), 0.1, 1.0)
         rt = applyDeadband(self.op1.getRightTriggerAxis(), 0.1, 1.0)
 
         if self.op1.getAButtonPressed():
             self.halfSpeed = not self.halfSpeed
+            SmartDashboard.putBoolean("halfSpeed",self.halfSpeed)
 
         if self.halfSpeed:
             slx *= 0.5
             sly *= 0.5
+            lt *= 0.5
+            rt *= 0.5
 
         return slx, sly, lt, rx, ry, rt
+
+    def balance(self):
+        print(self.gyro.getPitch())
+        offset = self.gyro.getRoll() * math.ceil((self.gyro.getYaw() / 360) % 1) * 0.03
+        self.drive(offset, 0, 0)
+        return abs(offset) < 0.05
+        # flip = 90 > (self.gyro.getYaw() % 360) > -90
+        # if self.gyro.getRoll() > 5 or self.gyro.getPitch() < -5:
+        #     self.drive(-0.5 if flip else 0.5, 0, 0)
+        # elif self.gyro.getRoll() < -5 or self.gyro.getPitch() > 5:
+        #     self.drive(0.5 if flip else -0.5, 0, 0)
+        # else:
+        #     self.drive(0.0, 0, 0)
+        # return abs(self.gyro.getRoll()) < 5
 
     def driveToPose(self, pose:Pose2d, velocity:float=None):
     #    if velocity is None:

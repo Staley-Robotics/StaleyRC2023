@@ -3,13 +3,13 @@
         "fieldRelative": true,
         "speed": {
             "angular": {
-                "maxVelocity": 25.13274122,
-                "maxAcceleration": 12.56637061
+                "maxVelocity": 100.48,
+                "maxAcceleration": 50.24
             },
             "linear": {
-                "maxVelocity": 8.0,
-                "maxVelocityX": 8.0,
-                "maxVelocityY": 8.0
+                "maxVelocity": 16.0,
+                "maxVelocityX": 16.0,
+                "maxVelocityY": 16.0
             }
         },
         "chassisControl": {

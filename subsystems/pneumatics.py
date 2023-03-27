@@ -1,12 +1,13 @@
 from . import Subsystems
 
-from wpilib import *
+from wpilib import PneumaticsControlModule, Compressor
 
-class Pneumatics(Subsystems):
+
+class Pneumatics:
     module: PneumaticsControlModule
     compressor: Compressor
 
-    def initVariables(self):
+    def __init__(self):
         self.module = PneumaticsControlModule(0)
         self.module.clearAllStickyFaults()
 
