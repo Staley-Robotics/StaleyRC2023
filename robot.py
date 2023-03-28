@@ -68,13 +68,13 @@ class Robot(TimedRobot):
     def autonomousInit(self):
         self.auto = Auto(self.subsystems[0], self.subsystems[1], self.subsystems[2])
         if self.ntTbl.getBoolean("centerS", False):
-            self.auto.mode = 1
+            self.auto.mode = "autonomousGeneral"
         elif self.ntTbl.getBoolean("leftS", False):
-            self.auto.mode = 3
+            self.auto.mode = "autonomousGeneral"
         elif self.ntTbl.getBoolean("rightS", False):
-            self.auto.mode = 2
+            self.auto.mode = "autonomousGeneral"
         else:
-            self.auto.mode = 0
+            self.auto.mode = "autonomousGeneral"
 
         self.auto.index = 0
         self.resetSpeeds = [

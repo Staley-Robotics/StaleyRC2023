@@ -32,15 +32,18 @@ class RobotState:
 class Auto:
     timer: wpilib.Timer
     steps: dict[str, list[RobotState]]
-    mode: str = "autonomousLeft"
-    index: int = 0
-    is_new_step: bool = True
+    mode: str
+    index: int
+    is_new_step: bool
 
     def __init__(self, swerve: SwerveDrive4, arm: Arm, claw: Claw):
         self.swerve = swerve
         self.arm = arm
         self.claw = claw
         self.timer = wpilib.Timer()
+        self.mode = "autonomousGeneral"
+        self.index = 0
+        self.is_new_step = True
         self.steps = {
             "autonomousGeneral": [
                 RobotState.getDefault(),

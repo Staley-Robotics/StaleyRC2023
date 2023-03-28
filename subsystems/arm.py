@@ -35,16 +35,18 @@ class Arm(Subsystems):
     LOW = 1
     MID = 2
     TOP = 3
+    MIN = 4
+    MAX = 5
 
-    pivot_stages: list[float] = [deg(10.0), deg(20.0), deg(85.0), deg(60.0)]
-    extend_stages: list[float] = [deg(0.0), deg(6.0), deg(24.0), deg(46.0)]
+    pivot_stages: list[float] = [deg(5.0), deg(20.0), deg(40.0), deg(60.0), deg(0), deg(62.5)]
+    extend_stages: list[float] = [inch(0.0), inch(6.0), inch(24.0), inch(46.0), inch(0.0), inch(46.0)]
 
     arm_r = WPI_TalonFX(9, "rio")
     arm_e = WPI_TalonSRX(31)
 
     op2: XboxController
-    pivot: float
-    extend: float
+    pivot: float = 0
+    extend: float = 0
 
     def initVariables(self):
         self.op2 = XboxController(1)
@@ -80,17 +82,20 @@ class Arm(Subsystems):
         self.arm_e.selectProfileSlot(0, 0)
 
     def run(self):
-        self.set_mode([
-            self.op2.getAButtonPressed(),
-            self.op2.getBButtonPressed(),
-            self.op2.getXButtonPressed(),
-            self.op2.getYButtonPressed()
-        ].index(True))
+        try:
+            self.set_mode([
+                self.op2.getAButtonPressed(),
+                self.op2.getBButtonPressed(),
+                self.op2.getXButtonPressed(),
+                self.op2.getYButtonPressed()
+            ].index(True))
+        except ValueError:
+            pass
         self.offset(
             self.op2.getRightY(),
             self.op2.getRightTriggerAxis(),
             self.op2.getLeftTriggerAxis(),
-            self.op2.getLefttBumperPressed()
+            self.op2.getLeftBumperPressed()
         )
         self.apply()
 
@@ -105,13 +110,14 @@ class Arm(Subsystems):
 
         self.pivot += deg(up * speed)
         self.pivot -= deg(down * speed)
-        self.extend = inch(out)
-        self.extend = max(min(self.extend, self.extend_stages[-1]), self.extend_stages[0])
+        self.extend += inch(out)
+        self.pivot = max(min(self.pivot, self.pivot_stages[self.MAX]), self.pivot_stages[self.MIN])
+        # self.extend = max(min(self.extend, self.extend_stages[self.MAX]), self.extend_stages[self.MIN])
 
     def apply(self):
-        print(self.pivot, self.extend)
+        print(self.pivot, self.extend, self.arm_e.getSelectedSensorPosition())
         self.arm_r.set(ControlMode.Position, self.pivot)
-        self.arm_e.set(ControlMode.Position, self.extend)
+        # self.arm_e.set(ControlMode.Position, self.extend)
 
     # def extension(self, goal):
     #     print(self.arm_e.getSelectedSensorPosition())
