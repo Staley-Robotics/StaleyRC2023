@@ -1,7 +1,6 @@
 from ctre import *
 
 from wpilib import *
-from wpimath import applyDeadband
 from . import Subsystems
 from math import pi
 
@@ -21,201 +20,110 @@ PID_loop_idx: int = 0
 k_slot_idx: int = 0
 k_gains: Gains = Gains(0.1, 0.0, 0.0, 0.0, 0, 1.0)
 k_Egains: Gains = Gains(1.0, 0.0, 0.0, 0.0, 0, 1.0)
-k_sensor_phase = True
-k_motor_invert = False
+
+
+def deg(ticks: float) -> float:
+    return ticks * (2048 / 360 * 200)
+
+
+def inch(ticks: float) -> float:
+    return ticks * (pi * 4096 / 360 * 1)
+
 
 class Arm(Subsystems):
+    BAY = 0
+    LOW = 1
+    MID = 2
+    TOP = 3
 
-    shaft_ratio: int = 1
-    mag_encoder: int = 4096
-    circumference: float = pi
-    inch_to_ticks: int = circumference * mag_encoder/360 * shaft_ratio
-    shaft_floor: float = 4 * inch_to_ticks  # resting on floor
-    shaft_bay: float = 0.0  # needs tuning
-    shaft_low: float = 6 * inch_to_ticks  # needs tuning
-    shaft_mid: float = 24 * inch_to_ticks  # needs tuning
-    shaft_top: float = 46 * inch_to_ticks  # needs tuning
-
-    integrated_encoder: int = 2048
-    pivot_ratio: int = 200
-    degrees_to_ticks = integrated_encoder/360 * pivot_ratio
-    pivot_bay: float = 10 * degrees_to_ticks
-    pivot_low: float = 20.0 * degrees_to_ticks
-    pivot_mid: float = 85.0 * degrees_to_ticks
-    pivot_top: float = 60.0 * degrees_to_ticks
+    pivot_stages: list[float] = [deg(10.0), deg(20.0), deg(85.0), deg(60.0)]
+    extend_stages: list[float] = [deg(0.0), deg(6.0), deg(24.0), deg(46.0)]
 
     arm_r = WPI_TalonFX(9, "rio")
-    arm_e = WPI_TalonSRX(31) #, "rio")
-
-    target_pos: float = 2500
-    extend_pos: float = 0.0
-    pivot_atm: float = 0
+    arm_e = WPI_TalonSRX(31)
 
     op2: XboxController
+    pivot: float
+    extend: float
 
     def initVariables(self):
         self.op2 = XboxController(1)
 
         self.arm_r.configFactoryDefault()
-
         self.arm_r.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, PID_loop_idx, k_timeout)
-        self.arm_r.setSensorPhase(k_sensor_phase)
-        self.arm_r.setInverted(k_motor_invert)
-
+        self.arm_r.setSensorPhase(True)
+        self.arm_r.setInverted(False)
         self.arm_r.configNominalOutputForward(0, k_timeout)
         self.arm_r.configNominalOutputReverse(0, k_timeout)
         self.arm_r.configPeakOutputForward(0.5, k_timeout)
         self.arm_r.configPeakOutputReverse(-0.5, k_timeout)
-
-        self.arm_r.configAllowableClosedloopError(0, PID_loop_idx, k_timeout)
-
+        self.arm_r.configAllowableClosedloopError(PID_loop_idx, 0, k_timeout)
         self.arm_r.config_kF(PID_loop_idx, k_gains.kF, k_timeout)
         self.arm_r.config_kP(PID_loop_idx, k_gains.kP, k_timeout)
         self.arm_r.config_kI(PID_loop_idx, k_gains.kI, k_timeout)
         self.arm_r.config_kD(PID_loop_idx, k_gains.kD, k_timeout)
 
         self.arm_e.configFactoryDefault()
-
         self.arm_e.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, PID_loop_idx, k_timeout)
-        self.arm_e.setSensorPhase(False) #k_sensor_phase)
-        self.arm_e.setInverted(False) #k_motor_invert)
-
+        self.arm_e.setSensorPhase(False)
+        self.arm_e.setInverted(False)
         self.arm_e.configNominalOutputForward(0, k_timeout)
         self.arm_e.configNominalOutputReverse(0, k_timeout)
         self.arm_e.configPeakOutputForward(1.0, k_timeout)
         self.arm_e.configPeakOutputReverse(-1.0, k_timeout)
-
         self.arm_e.configAllowableClosedloopError(PID_loop_idx, 0, k_timeout)
-
         self.arm_e.config_kF(PID_loop_idx, k_Egains.kF, k_timeout)
         self.arm_e.config_kP(PID_loop_idx, k_Egains.kP, k_timeout)
         self.arm_e.config_kI(PID_loop_idx, k_Egains.kI, k_timeout)
         self.arm_e.config_kD(PID_loop_idx, k_Egains.kD, k_timeout)
-
-        #self.arm_e.setSelectedSensorPosition(0, PID_loop_idx, k_timeout)
-        absPos = self.arm_e.getSensorCollection().getPulseWidthPosition()
-        offset = 5000
-        self.arm_e.setSelectedSensorPosition( offset )
-
+        self.arm_e.setSelectedSensorPosition(0.0)
         self.arm_e.selectProfileSlot(0, 0)
 
-        self.possiblePivotPos = [self.pivot_bay, self.pivot_low, self.pivot_mid, self.pivot_top]
-        self.possibleExtendPos = [self.shaft_bay, self.shaft_low, self.shaft_mid, self.shaft_top]
-        self.index: int = 0
-        self.pivotAd = 0
-        self.extendAd = 0
-        self.curPos = 0
-        self.target = 0
-        self.log = -1
-        self.target = 0
-
-    def getInputs(self) -> tuple[float, float, float, bool, bool, bool, bool]:
-        point_1 = False#self.op2.getAButtonPressed()
-        point_2 = self.op2.getBButtonPressed()
-        point_3 = self.op2.getXButtonPressed()
-        point_4 = self.op2.getYButtonPressed()
-        pivot_axis = self.op2.getRightTriggerAxis()
-        pivot_negative_axis = self.op2.getLeftTriggerAxis()
-        shaft_axis = applyDeadband( self.op2.getRightY(), 0.1, 1.0 )
-        return pivot_axis, pivot_negative_axis, shaft_axis, point_1, point_2, point_3, point_4
-
     def run(self):
-        inputs = self.getInputs()
-        self.extend_stickler(inputs[2])
-        self.rotate_stickler(
-            inputs[0],
-            inputs[1],
-            inputs[3],
-            inputs[4],
-            inputs[5],
-            inputs[6]
+        self.set_mode([
+            self.op2.getAButtonPressed(),
+            self.op2.getBButtonPressed(),
+            self.op2.getXButtonPressed(),
+            self.op2.getYButtonPressed()
+        ].index(True))
+        self.offset(
+            self.op2.getRightY(),
+            self.op2.getRightTriggerAxis(),
+            self.op2.getLeftTriggerAxis(),
+            self.op2.getLefttBumperPressed()
         )
-        # self.extend()
+        self.apply()
 
-    def rotate_stickler(self, up, down, a, b, x, y):
-        if x:
-            self.pivot_atm = self.pivot_mid - (6.5 * self.degrees_to_ticks)
-        if y:
-            self.pivot_atm = self.pivot_mid + (10.0 * self.degrees_to_ticks)
-            #pivot_bay: float = 10 * degrees_to_ticks
-            #pivot_low: float = 20.0 * degrees_to_ticks
-            #pivot_mid: float = 85.0 * degrees_to_ticks
-            #pivot_top: float = 60.0 * degrees_to_ticks
+    def set_mode(self, mode: int):
+        self.pivot = self.pivot_stages[mode]
+        self.extend = self.extend_stages[mode]
 
-        self.pivot_atm += up * 1.0 * self.degrees_to_ticks
-        self.pivot_atm -= down * 1.0 * self.degrees_to_ticks
-        self.arm_r.set(ControlMode.Position, self.pivot_atm)
+    def offset(self, out: float, up: float, down: float, slow: bool):
+        speed = 2.0
+        if slow:
+            speed = 0.9
 
-    def extend_stickler(self, goal):
-        return
-        current = self.target_pos #self.arm_e.getSelectedSensorPosition()
-        toChange = goal * -410 #-48 * self.inch_to_ticks
-        target = current + toChange
-        #if target < -48 * self.inch_to_ticks:
-        #    target = -48 * self.inch_to_ticks
-        if target > 15000:
-            target = 15000
-        elif target < 0:
-            target = 0
+        self.pivot += deg(up * speed)
+        self.pivot -= deg(down * speed)
+        self.extend = inch(out)
+        self.extend = max(min(self.extend, self.extend_stages[-1]), self.extend_stages[0])
 
-        print( current, toChange, target, self.arm_e.getSelectedSensorPosition() )
-        self.target_pos = target
-        self.arm_e.set(ControlMode.Position, int(target))
+    def apply(self):
+        print(self.pivot, self.extend)
+        self.arm_r.set(ControlMode.Position, self.pivot)
+        self.arm_e.set(ControlMode.Position, self.extend)
 
-    def pivot(self, bay, low, mid, top):
-        if bay:
-            if self.pivot_bay >= self.target > 0:
-                self.target -= 1 * self.degrees_to_ticks
-            elif self.target <= 0:
-                self.target = 0
-            else:
-                self.target = self.pivot_bay
-        elif low:
-            self.target = self.pivot_low
-        elif mid:
-            self.target = self.pivot_mid
-        elif top:
-            self.target = self.pivot_top
-
-        self.arm_r.set(ControlMode.Position, self.target)
-        # print("Encoder " + str(self.arm_r.getSelectedSensorPosition()))
-        # print("Target " + str(self.target))
-        # print("Screw Up Amount " + str(abs(self.target - self.arm_r.getSelectedSensorPosition())))
-
-    def extend(self):
-        target = 0.0
-        if self.getInputs()[3]:
-            target = self.shaft_bay
-        elif self.getInputs()[4]:
-            target = self.shaft_low
-        elif self.getInputs()[5]:
-            target = self.shaft_mid
-        elif self.getInputs()[6]:
-            target = self.shaft_top
-        if target > 48 * self.inch_to_ticks:
-            target = 48 * self.inch_to_ticks
-        self.arm_e.set(ControlMode.Position, target)
-        #print("Encoder " + str(self.arm_e.getSelectedSensorPosition()))
-        #print("Target " + str(target))
-        #print("Screw Up Amount " + str(abs(target - self.arm_e.getSelectedSensorPosition())))
-
-    def listExtend(self):
-        if self.getInputs()[4]:
-            if self.index < len(self.possibleExtendPos) - 1 and self.log > self.time.get() - 20:
-                self.index += 1
-                self.extendAd = 0
-                self.log = self.pipeline.time.get()
-        elif self.getInputs()[5] and self.log > self.pipeline.time.get() - 20:
-            if self.index > 0:
-                self.index -= 1
-                self.extendAd = 0
-                self.log = self.pipeline.time.get()
-        #print(self.index)
-        target = self.possibleExtendPos[int(self.index)]
-        if self.getInputs()[3]:
-            self.extendAd += 1 * self.degrees_to_ticks
-        elif self.getInputs()[6]:
-            self.extendAd -= 1 * self.degrees_to_ticks
-        target += self.extendAd
-        self.curPos = self.possibleExtendPos[int(self.index)]
-        self.arm_e.set(ControlMode.Position, target)
+    # def extension(self, goal):
+    #     print(self.arm_e.getSelectedSensorPosition())
+    #     return
+    #     current = self.target_pos
+    #     toChange = goal * -410
+    #     target = current + toChange
+    #     if target > 15000:
+    #         target = 15000
+    #     elif target < 0:
+    #         target = 0
+    #
+    #     print(current, toChange, target, self.arm_e.getSelectedSensorPosition())
+    #     self.target_pos = target
+    #     self.arm_e.set(ControlMode.Position, int(target))

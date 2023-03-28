@@ -8,7 +8,7 @@ from .pneumatics import Pneumatics
 class Claw(Subsystems):
     solenoid: DoubleSolenoid
     op2: XboxController
-    clawOpen: bool = False
+    claw_open: bool = False
     pneumatics: Pneumatics
 
     def __init__(self, pneumatics: Pneumatics):
@@ -22,23 +22,23 @@ class Claw(Subsystems):
         self.solenoid = DoubleSolenoid(0, PneumaticsModuleType.CTREPCM, 3, 5) #self.module.makeDoubleSolenoid(4, 0)
         #self.solenoid.set(DoubleSolenoid.Value.kForward)
 
-    def getInputs(self) -> bool:
-        grip = self.op2.getAButtonPressed()
-        return grip
-
     def runInit(self):
-        self.solenoid.set( DoubleSolenoid.Value.kForward )
+        self.solenoid.set(DoubleSolenoid.Value.kForward)
 
     def run(self):
-        self.toggle(self.getInputs())
+        self.toggle(self.op2.getRightBumperPressed())
 
     def toggle(self, toggle_value: bool):
         if toggle_value:
-            if self.clawOpen:
-                self.clawOpen = False
-                self.solenoid.set( DoubleSolenoid.Value.kForward )
+            if self.claw_open:
+                self.claw_open = False
+                self.solenoid.set(DoubleSolenoid.Value.kForward)
                 print("Open")
             else:
-                self.clawOpen = True
-                self.solenoid.set( DoubleSolenoid.Value.kReverse )
+                self.claw_open = True
+                self.solenoid.set(DoubleSolenoid.Value.kReverse)
                 print("Close")
+
+    def set(self, gripping: bool):
+        self.claw_open = gripping
+        self.solenoid.set(DoubleSolenoid.Value.kForward if gripping else DoubleSolenoid.Value.kReverse)
