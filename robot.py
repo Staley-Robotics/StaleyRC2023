@@ -58,12 +58,11 @@ class Robot(TimedRobot):
         self.ntTbl.setPersistent("rightS")
 
     def robotPeriodic(self):
-        #print(
-        #    self.subsystems[0].moduleFR.angleMotor.getSelectedSensorPosition(),
-        #    self.subsystems[0].moduleFR.angleSensor.getAbsolutePosition(),
-        #    self.subsystems[0].moduleFR.angleSensor.getPosition()
-        #)
-        self.pneumatics_system.run()
+        try:
+            self.swerve.updateOdometry()
+            self.pneumatics_system.run()
+        except Exception as e:
+            print( "Robot Periodic: ", e)
 
     def autonomousInit(self):
         self.auto = Auto(self.subsystems[0], self.subsystems[1], self.subsystems[2])
@@ -82,9 +81,9 @@ class Robot(TimedRobot):
             self.subsystems[0].speed_linear_maxvelocityx,
             self.subsystems[0].speed_linear_maxvelocityy
         ]
-        self.subsystems[0].speed_linear_maxvelocity = 8
-        self.subsystems[0].speed_linear_maxvelocityx = 8
-        self.subsystems[0].speed_linear_maxvelocityy = 8
+        self.subsystems[0].speed_linear_maxvelocity = 4.0
+        self.subsystems[0].speed_linear_maxvelocityx = 4.0
+        self.subsystems[0].speed_linear_maxvelocityy = 4.0
     def autonomousPeriodic(self):
         self.auto.run()
     def autonomousExit(self):

@@ -4,21 +4,23 @@ from . import Subsystems
 from .__func__ import *
 from ctre import WPI_TalonFX, ControlMode, FeedbackDevice, RemoteFeedbackDevice, NeutralMode
 from ctre.sensors import *  # WPI_Pigeon2, WPI_CANCoder, SensorInitializationStrategy, AbsoluteSensorRange
-from wpilib import SmartDashboard, XboxController
+from wpilib import SmartDashboard, XboxController, DriverStation, Timer
 from wpimath import applyDeadband
 from wpimath.controller import PIDController, ProfiledPIDController, ProfiledPIDControllerRadians, \
     HolonomicDriveController, SimpleMotorFeedforwardMeters
+from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 from wpimath.kinematics import SwerveDrive4Kinematics, SwerveDrive4Odometry, SwerveModulePosition, SwerveModuleState, \
     ChassisSpeeds
-from wpimath.trajectory import TrapezoidProfile, TrapezoidProfileRadians
+from wpimath.trajectory import TrapezoidProfile, TrapezoidProfileRadians, TrajectoryGenerator, TrajectoryConfig
 
 
 class SwerveDrive4(Subsystems):
     cSpeeds: ChassisSpeeds = ChassisSpeeds()
     op1 = XboxController(0)
     halfSpeed = False
+    isRed = True
 
     def initSubsystem(self):
         SmartDashboard.putBoolean("halfSpeed", self.halfSpeed)
@@ -44,7 +46,22 @@ class SwerveDrive4(Subsystems):
         )
 
         # SwerveOdometry
-        self.odometry = SwerveDrive4Odometry(
+        self.odometry = self.setOdometry()
+        self.odometryOld = self.setOdometryOld()
+
+        self.slx = SlewRateLimiter(2)
+        self.sly = SlewRateLimiter(2)
+
+        self.ntLimelight = self.ntInst.getTable("limelight-one")
+
+        try:
+            alliance = DriverStation.getAlliance()
+            self.isRed = (alliance == DriverStation.Alliance.kRed)
+        except Exception as e:
+            print( "Swerve:", e )
+
+    def setOdometryOld(self):
+        odom = SwerveDrive4Odometry(
             self.kinematics,
             self.gyro.getRotation2d(),
             (
@@ -55,9 +72,21 @@ class SwerveDrive4(Subsystems):
             ),
             Pose2d(Translation2d(0, 0), Rotation2d(0).fromDegrees(180))
         )
+        return odom
 
-        self.slx = SlewRateLimiter(2)
-        self.sly = SlewRateLimiter(2)
+    def setOdometry(self):
+        odom = SwerveDrive4PoseEstimator(
+            self.kinematics,
+            self.gyro.getRotation2d(),
+            (
+                self.moduleFL.getPosition(),
+                self.moduleFR.getPosition(),
+                self.moduleBL.getPosition(),
+                self.moduleBR.getPosition()
+            ),
+            Pose2d(Translation2d(0, 0), Rotation2d(0).fromDegrees(180))
+        )
+        return odom
 
     def initVariables(self):
         # Field Relative
@@ -72,22 +101,24 @@ class SwerveDrive4(Subsystems):
         self.speed_angular_maxvelocity = self.ntVars.getNumber("speed/angular/maxVelocity", (8 * math.pi))
         self.speed_angular_maxacceleration = self.ntVars.getNumber("speed/angular/maxAcceleration", (4 * math.pi))
 
-        # Chassis X Direction PID
-        # self.pidX_kp = self.ntVars.getNumber("ChassisControl/X/kP",1.0)
-        # self.pidX_ki = self.ntVars.getNumber("ChassisControl/X/kI",0.0)
-        # self.pidX_kd = self.ntVars.getNumber("ChassisControl/X/kD",0.0)
-        # self.pidX_ks = self.ntVars.getNumber("ChassisControl/X/kS",0.0)
-        # self.pixX_kv = self.ntVars.getNumber("ChassisControl/X/kV",0.0)
-        # self.pidX_ka = self.ntVars.getNumber("ChassisControl/X/kA",0.0)
-        # self.pidX_tolerance = self.ntVars.getNumber("ChassisControl/X/tolerance",1.0)
+        self.pathConfig = TrajectoryConfig( 0.5, 0.25 )
 
-        # self.pidY_kp = self.ntVars.getNumber("ChassisControl/Y/kP",1.0)
-        # self.pidY_ki = self.ntVars.getNumber("ChassisControl/Y/kI",0.0)
-        # self.pidY_kd = self.ntVars.getNumber("ChassisControl/Y/kD",0.0)
-        # self.pidY_ks = self.ntVars.getNumber("ChassisControl/Y/kS",0.0)
-        # self.pidY_kv = self.ntVars.getNumber("ChassisControl/Y/kV",0.0)
-        # self.pidY_ka = self.ntVars.getNumber("ChassisControl/Y/kA",0.0)
-        # self.pidY_tolerance = self.ntVars.getNumber("ChassisControl/Y/tolerance",1.0)
+        # Chassis X Direction PID
+        self.chassiscontrol_x_kp = self.ntVars.getNumber("ChassisControl/X/kP",1.0)
+        self.chassiscontrol_x_ki = self.ntVars.getNumber("ChassisControl/X/kI",0.0)
+        self.chassiscontrol_x_kd = self.ntVars.getNumber("ChassisControl/X/kD",0.0)
+        self.chassiscontrol_x_ks = self.ntVars.getNumber("ChassisControl/X/kS",0.0)
+        self.chassiscontrol_x_kv = self.ntVars.getNumber("ChassisControl/X/kV",0.0)
+        self.chassiscontrol_x_ka = self.ntVars.getNumber("ChassisControl/X/kA",0.0)
+        self.chassiscontrol_x_tolerance = self.ntVars.getNumber("ChassisControl/X/tolerance",1.0)
+
+        self.chassiscontrol_y_kp = self.ntVars.getNumber("ChassisControl/Y/kP",1.0)
+        self.chassiscontrol_y_ki = self.ntVars.getNumber("ChassisControl/Y/kI",0.0)
+        self.chassiscontrol_y_kd = self.ntVars.getNumber("ChassisControl/Y/kD",0.0)
+        self.chassiscontrol_y_ks = self.ntVars.getNumber("ChassisControl/Y/kS",0.0)
+        self.chassiscontrol_y_kv = self.ntVars.getNumber("ChassisControl/Y/kV",0.0)
+        self.chassiscontrol_y_ka = self.ntVars.getNumber("ChassisControl/Y/kA",0.0)
+        self.chassiscontrol_y_tolerance = self.ntVars.getNumber("ChassisControl/Y/tolerance",1.0)
 
         # Chassis Omega PID
         self.chassiscontrol_omega_kp = self.ntVars.getNumber("chassisControl/omega/kP", 1.0)
@@ -105,10 +136,18 @@ class SwerveDrive4(Subsystems):
 
     def initPidControllers(self):
         # Create X Direction PID Controller
-        # self.pidX = PIDController()
+        self.pidX = PIDController(
+            self.chassiscontrol_x_kp,
+            self.chassiscontrol_x_ki,
+            self.chassiscontrol_x_kd
+        )
 
         # Create Y Direction PID Controller
-        # self.pidY = PIDController()
+        self.pidY = PIDController(
+            self.chassiscontrol_y_kp,
+            self.chassiscontrol_y_ki,
+            self.chassiscontrol_y_kd
+        )
 
         # Create Omega PID
         self.pidO = ProfiledPIDControllerRadians(
@@ -128,10 +167,16 @@ class SwerveDrive4(Subsystems):
 
     def updatePidControllers(self):
         # Update X Direction PID Controller
-        # pidX = self.pidX #self.pidH.getXController()
+        pidX = self.pidX #self.pidH.getXController()
+        pidX.setP(self.chassiscontrol_x_kp)
+        pidX.setI(self.chassiscontrol_x_ki)
+        pidX.setD(self.chassiscontrol_x_kd)
 
         # Update Y Direction PID Controller
-        # pidY = self.pidY #self.pidH.getYController()
+        pidY = self.pidY #self.pidH.getYController()
+        pidY.setP(self.chassiscontrol_y_kp)
+        pidY.setI(self.chassiscontrol_y_ki)
+        pidY.setD(self.chassiscontrol_y_kd)
 
         # Update Omega PID Controller
         pidO = self.pidO  # self.pidH.getThetaController()
@@ -150,6 +195,32 @@ class SwerveDrive4(Subsystems):
         # self.pidH.setTolerance()
 
     def run(self):
+
+        if self.op1.getYButtonPressed():
+            try:
+                self.path = TrajectoryGenerator.generateTrajectory(
+                    [
+                        Pose2d( 4, 3.5, Rotation2d(0) ),
+                        Pose2d( 4, 3.75, Rotation2d(0) )
+                    ],
+                    self.pathConfig
+                )
+                self.pathClock = Timer()
+                self.pathClock.start()
+            except Exception as e:
+                print( "YPressed:", e )
+        if self.op1.getYButtonReleased():
+            self.path = None
+            self.pathClock.stop()
+        if self.op1.getYButton():
+            try:
+                nextPose = self.path.sample( self.pathClock.get() )
+                self.driveToPose( nextPose.pose )
+            except Exception as e:
+                print( "Y Held:", e )
+            return
+
+
         # Process Controller Inputs
         lx, ly, lt, rx, ry, rt = self.getInputs()
 
@@ -199,18 +270,17 @@ class SwerveDrive4(Subsystems):
         # return abs(self.gyro.getRoll()) < 5
 
     def driveToPose(self, pose: Pose2d, velocity: float = None):
-           # if velocity is None:
-           #     velocity = self.linear_maxvelocity
-           #
-           # currentPose = self.odometry.getPose()
-           # x = self.pidX.calculate( currentPose.X(), pose.X() )
-           # y = self.pidY.calculate( currentPose.Y(), pose.Y() )
-           # rot = self.driveToRotation( x, y, 1, rotation=pose.rotation() )
-           # print( currentPose.X(), pose.X() )
-           # print( currentPose.Y(), pose.Y() )
-           # print( x, y, pose.rotation() )
-           # return self.pidX.atSetpoint() and self.pidY.atSetpoint() and rot
-        pass
+        if velocity is None:
+            velocity = self.speed_linear_maxvelocity
+
+        currentPose = self.odometry.getEstimatedPosition()
+        x = self.pidX.calculate( currentPose.X(), pose.X() )
+        y = self.pidY.calculate( currentPose.Y(), pose.Y() )
+        rot = self.driveToRotation( x, y, 1, rotation=pose.rotation() )
+        print( currentPose.X(), pose.X() )
+        print( currentPose.Y(), pose.Y() )
+        print( x, y, pose.rotation() )
+        return self.pidX.atSetpoint() and self.pidY.atSetpoint() and rot
 
     def driveWithRotate(self, lx=0.0, ly=0.0, rx=0.0, ry=0.0):
         magnitude = math.sqrt(rx * rx + ry * ry)
@@ -264,18 +334,59 @@ class SwerveDrive4(Subsystems):
         self.moduleBL.setDesiredState(modStates[2])
         self.moduleBR.setDesiredState(modStates[3])
 
-        self.updateOdometry()
+        #self.updateOdometry()
 
     def updateOdometry(self):
-        old = self.odometry.getPose()
-        pose = self.odometry.update(
+        self.updateOdometryOld()
+        self.updateOdometryNew()
+
+    def updateOdometryNew(self):
+        self.odometry.update(
+            self.gyro.getRotation2d(),
+            [
+                self.moduleFL.getPosition(),
+                self.moduleFR.getPosition(),
+                self.moduleBL.getPosition(),
+                self.moduleBR.getPosition()
+            ]
+        )
+
+        # Limelight Data
+        try:
+            aprilTag = self.ntLimelight.getNumber("tid",-1)
+            if aprilTag != -1:
+                if self.isRed:
+                    botPose = self.ntLimelight.getNumberArray("botpose_wpired",None)
+                else:
+                    botPose = self.ntLimelight.getNumberArray("botpose_wpiblue",None)
+
+                if botPose is None: return
+
+                llx = botPose[0]
+                lly = botPose[1]
+                llz = botPose[5]
+                llPose = Pose2d(llx,lly, Rotation2d(0).fromDegrees(llz))
+                llTime = botPose[6]
+                self.odometry.addVisionMeasurement(
+                    llPose,
+                    llTime,
+                )
+
+            pose = self.odometry.getEstimatedPosition()
+            SmartDashboard.putNumberArray("Field/SwerveNew", [pose.X(), pose.Y(), pose.rotation().degrees()])
+        except Exception as e:
+            print( "Update Odometry: ", e )
+
+    def updateOdometryOld(self):
+        #old = self.odometry.getPose()
+        pose = self.odometryOld.update(
             self.gyro.getRotation2d(),
             self.moduleFL.getPosition(),
             self.moduleFR.getPosition(),
             self.moduleBL.getPosition(),
             self.moduleBR.getPosition()
         )
-        SmartDashboard.putNumberArray("Field/Swerve", [pose.X(), pose.Y(), pose.rotation().degrees()])
+        SmartDashboard.putNumberArray("Field/SwerveOld", [pose.X(), pose.Y(), pose.rotation().degrees()])
         # if old.x != pose.x or old.y != pose.y or old.rotation().degrees() != pose.rotation().degrees():
         #    pass
 
@@ -338,7 +449,7 @@ class SwerveModule(Subsystems):
         self.drivemotors_slewratesteps: int = self.ntVars.getNumber("driveMotors/slewRateSteps", 200000)
 
         # Physical Mechanics
-        self.wheelRadius: float = self.ntVars.getNumber("wheelRadius", 0.05)
+        self.wheel_radius: float = self.ntVars.getNumber("wheel/radius", 0.0508)
         self.drivemotors_ticks: float = self.ntVars.getNumber("driveMotors/ticks", 2048.0)
         self.anglemotors_ticks: float = self.ntVars.getNumber("angleMotors/ticks", 2048.0)
         self.anglesensors_ticks: float = self.ntVars.getNumber("angleSensors/ticks", 4096.0)
@@ -443,7 +554,7 @@ class SwerveModule(Subsystems):
         # Drive Motor (open loop??? or closed loop PID)
         if self.drivemotors_integratedpid:
             # Get Velocity in Ticks per 100 ms
-            osTp100ms = getVelocityMpsToTp100ms(optimalState.speed, self.drivemotors_ticks, self.wheelRadius,
+            osTp100ms = getVelocityMpsToTp100ms(optimalState.speed, self.drivemotors_ticks, self.wheel_radius,
                                                 self.drivemotors_gearratio)
             ####
             #### Do we want to add a Slew Rate Limiter Here?
@@ -491,7 +602,7 @@ class SwerveModule(Subsystems):
 
     def getPosition(self) -> SwerveModulePosition:
         dPosition = self.driveMotor.getSelectedSensorPosition(0)
-        driveMeters = getDistanceTicksToMeters(dPosition, self.drivemotors_ticks, self.wheelRadius,
+        driveMeters = getDistanceTicksToMeters(dPosition, self.drivemotors_ticks, self.wheel_radius,
                                                self.drivemotors_gearratio)
         rPosition = self.angleMotor.getSelectedSensorPosition(0)  ## Should we use self.angleSensor ??
         rotatePosition = getRotationFromTicks(rPosition, self.anglesensors_ticks)

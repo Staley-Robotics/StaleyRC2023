@@ -115,7 +115,7 @@ class Arm(Subsystems):
         # self.extend = max(min(self.extend, self.extend_stages[self.MAX]), self.extend_stages[self.MIN])
 
     def apply(self):
-        print(self.pivot, self.extend, self.arm_e.getSelectedSensorPosition())
+        #print(self.pivot, self.extend, self.arm_e.getSelectedSensorPosition())
         self.arm_r.set(ControlMode.Position, self.pivot)
         # self.arm_e.set(ControlMode.Position, self.extend)
 
