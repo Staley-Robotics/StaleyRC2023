@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="b70ca002-f918-421d-8398-5a40819d3620" name="Changes" comment="Autonomous Fixes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/robot.py" beforeDir="false" afterPath="$PROJECT_DIR$/robot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/subsystems/arm.py" beforeDir="false" afterPath="$PROJECT_DIR$/subsystems/arm.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/subsystems/swervedrive.py" beforeDir="false" afterPath="$PROJECT_DIR$/subsystems/swervedrive.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -81,7 +79,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680045053213</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Autonomous Fixes">
+      <created>1680056678375</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1680056678375</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
