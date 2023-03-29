@@ -257,6 +257,7 @@ class SwerveDrive4(Subsystems):
             state.pose.rotation()
         )
         self.updateSwerveModules( cSpeed )
+        print( self.pidH.atReference() )
 
     def driveToPose(self, pose: Pose2d, velocity: float = None):
         if velocity is None:
