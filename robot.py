@@ -21,6 +21,8 @@ class Robot(TimedRobot):
     arm: Arm
     pneumatics_system: Pneumatics
     claw: Claw
+    auto: Auto
+    resetSpeeds: list[float]
 
     def robotInit(self):
         # Initialization Wait for Canbus (Known Issue)
@@ -58,38 +60,40 @@ class Robot(TimedRobot):
         self.ntTbl.setPersistent("rightS")
 
     def robotPeriodic(self):
-        try:
-            self.swerve.updateOdometry()
-            self.pneumatics_system.run()
-        except Exception as e:
-            print( "Robot Periodic: ", e)
+        #print(
+        #    self.subsystems[0].moduleFR.angleMotor.getSelectedSensorPosition(),
+        #    self.subsystems[0].moduleFR.angleSensor.getAbsolutePosition(),
+        #    self.subsystems[0].moduleFR.angleSensor.getPosition()
+        #)
+        self.pneumatics_system.run()
 
     def autonomousInit(self):
-        self.auto = Auto(self.subsystems[0], self.subsystems[1], self.subsystems[2])
+        self.auto = Auto(self.swerve, self.arm, self.claw)
+        self.auto.using_path = False
         if self.ntTbl.getBoolean("centerS", False):
-            self.auto.mode = "autonomousGeneral"
+            self.auto.set_mode("AutonomousLeft")
         elif self.ntTbl.getBoolean("leftS", False):
-            self.auto.mode = "autonomousGeneral"
+            self.auto.set_mode("AutonomousLeft")
         elif self.ntTbl.getBoolean("rightS", False):
-            self.auto.mode = "autonomousGeneral"
+            self.auto.set_mode("AutonomousLeft")
         else:
-            self.auto.mode = "autonomousGeneral"
+            self.auto.set_mode("AutonomousLeft")
 
         self.auto.index = 0
         self.resetSpeeds = [
-            self.subsystems[0].speed_linear_maxvelocity,
-            self.subsystems[0].speed_linear_maxvelocityx,
-            self.subsystems[0].speed_linear_maxvelocityy
+            self.swerve.speed_linear_maxvelocity,
+            self.swerve.speed_linear_maxvelocityx,
+            self.swerve.speed_linear_maxvelocityy
         ]
-        self.subsystems[0].speed_linear_maxvelocity = 4.0
-        self.subsystems[0].speed_linear_maxvelocityx = 4.0
-        self.subsystems[0].speed_linear_maxvelocityy = 4.0
+        self.swerve.speed_linear_maxvelocity = 8
+        self.swerve.speed_linear_maxvelocityx = 8
+        self.swerve.speed_linear_maxvelocityy = 8
     def autonomousPeriodic(self):
         self.auto.run()
     def autonomousExit(self):
-        self.subsystems[0].speed_linear_maxvelocity = self.resetSpeeds[0]
-        self.subsystems[0].speed_linear_maxvelocityx = self.resetSpeeds[1]
-        self.subsystems[0].speed_linear_maxvelocityy = self.resetSpeeds[2]
+        self.swerve.speed_linear_maxvelocity = self.resetSpeeds[0]
+        self.swerve.speed_linear_maxvelocityx = self.resetSpeeds[1]
+        self.swerve.speed_linear_maxvelocityy = self.resetSpeeds[2]
 
 
     def teleopInit(self):
@@ -101,11 +105,12 @@ class Robot(TimedRobot):
         for i in range(len(self.subsystems)):
             s:Subsystems = self.subsystems[i]
             s.run()
+
     def teleopExit(self): pass
 
     def testInit(self):
         # Load NT Table for Testing
-        ntTest = self.ntInst.getTable("Testing" )
+        ntTest = self.ntInst.getTable("Testing")
         ntTestVars = ntTest.getTopics()
         for i in range(len(ntTestVars)):
             vName = ntTestVars[i].getName().removeprefix("/Testing/") 

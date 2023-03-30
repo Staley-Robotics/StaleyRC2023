@@ -926,5 +926,45 @@
     "properties": {
       "persistent": true
     }
+  },
+  {
+    "name": "/Testing/Arm",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Testing/Claw",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Startup/leftS",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Startup/centerS",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/Startup/rightS",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
   }
 ]
