@@ -25,6 +25,7 @@
     },
     "windows": {
       "/SmartDashboard/Field": {
+        "image": "/Users/560020/Downloads/2023-field.png",
         "window": {
           "visible": true
         }
@@ -45,13 +46,32 @@
       "InitConfig": {
         "SwerveDrive4": {
           "open": true
+        },
+        "SwerveModule": {
+          "BackLeft": {
+            "open": true
+          }
         }
       },
       "Testing": {
         "open": true
+      },
+      "Variables": {
+        "SwerveDrive4": {
+          "chassisControl": {
+            "open": true
+          }
+        },
+        "open": true
       }
     },
     "transitory": {
+      "SmartDashboard": {
+        "Field": {
+          "open": true
+        },
+        "open": true
+      },
       "Variables": {
         "SwerveDrive4": {
           "open": true,

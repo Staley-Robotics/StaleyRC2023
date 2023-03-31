@@ -1,5 +1,5 @@
 import time
-from wpilib import * # TimedRobot, run
+from wpilib import TimedRobot, run, PowerDistribution, DriverStation
 from ntcore import NetworkTableInstance, Event, EventFlags
 
 from build import Build
@@ -10,8 +10,6 @@ from subsystems.swervedrive import SwerveDrive4
 from subsystems.pneumatics import Pneumatics
 from subsystems.arm import Arm
 from subsystems.claw import Claw
-#from subsystems.bumper import Bumper
-#from subsystems.limelight import Limelight
 
 
 class Robot(TimedRobot):
@@ -22,6 +20,7 @@ class Robot(TimedRobot):
     pneumatics_system: Pneumatics
     claw: Claw
     auto: Auto
+    alliance: str
     resetSpeeds: list[float]
 
     def robotInit(self):
@@ -31,6 +30,8 @@ class Robot(TimedRobot):
         # Get Build Settings
         Build().buildInitConfig()
         Build().buildVariables()
+
+        self.alliance = "red" if DriverStation.getAlliance() == DriverStation.Alliance.kRed else "blue"
 
         # Connect to NetworkTables
         self.ntInst = NetworkTableInstance.getDefault()
@@ -68,16 +69,16 @@ class Robot(TimedRobot):
         self.pneumatics_system.run()
 
     def autonomousInit(self):
-        self.auto = Auto(self.swerve, self.arm, self.claw)
+        self.auto = Auto(self)
         self.auto.using_path = False
         if self.ntTbl.getBoolean("centerS", False):
-            self.auto.set_mode("AutonomousLeft")
+            self.auto.set_mode(f"{self.alliance}-center")
         elif self.ntTbl.getBoolean("leftS", False):
-            self.auto.set_mode("AutonomousLeft")
+            self.auto.set_mode(f"{self.alliance}-left")
         elif self.ntTbl.getBoolean("rightS", False):
-            self.auto.set_mode("AutonomousLeft")
+            self.auto.set_mode(f"{self.alliance}-right")
         else:
-            self.auto.set_mode("AutonomousLeft")
+            self.auto.set_mode("none")
 
         self.auto.index = 0
         self.resetSpeeds = [
@@ -88,8 +89,10 @@ class Robot(TimedRobot):
         self.swerve.speed_linear_maxvelocity = 8
         self.swerve.speed_linear_maxvelocityx = 8
         self.swerve.speed_linear_maxvelocityy = 8
+
     def autonomousPeriodic(self):
         self.auto.run()
+
     def autonomousExit(self):
         self.swerve.speed_linear_maxvelocity = self.resetSpeeds[0]
         self.swerve.speed_linear_maxvelocityx = self.resetSpeeds[1]
